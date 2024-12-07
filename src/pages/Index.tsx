@@ -56,7 +56,10 @@ const Index = () => {
         {/* Product Button */}
         <div className="absolute top-4 left-4">
           <Link to="/product">
-            <Button variant="outline" className="border-gray-600 text-white hover:bg-gray-700">
+            <Button 
+              variant="outline" 
+              className="bg-blue-900 text-white hover:bg-blue-800 border-blue-700"
+            >
               Product
             </Button>
           </Link>
@@ -69,7 +72,7 @@ const Index = () => {
         >
           <div className="flex items-center justify-center gap-4 mb-4">
             <Database className="w-12 h-12 text-blue-500" />
-            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-500 to-violet-500 text-transparent bg-clip-text">
+            <h1 className="text-4xl md:text-6xl font-bold text-white">
               ZeenBase
             </h1>
           </div>
