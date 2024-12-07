@@ -97,7 +97,7 @@ const Index = () => {
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Button
               type="submit"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary hover:bg-primary/90"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-900 text-white hover:bg-blue-800 border-blue-700"
               disabled={isSearching}
             >
               {isSearching ? (
