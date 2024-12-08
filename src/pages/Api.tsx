@@ -28,7 +28,7 @@ const Api = () => {
     },
   });
 
-  const { data: subscription } = useQuery({
+  const { data: subscription, isError: isSubscriptionError } = useQuery({
     queryKey: ["subscription"],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -52,7 +52,7 @@ const Api = () => {
     },
   });
 
-  const { data: apiKey, isLoading } = useQuery({
+  const { data: apiKey, isLoading, error: apiKeyError } = useQuery({
     queryKey: ["api-key"],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -100,6 +100,18 @@ const Api = () => {
     );
   }
 
+  if (isSubscriptionError) {
+    toast.error("Erreur lors de la vérification de l'abonnement");
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+        <NavButtons />
+        <div className="container mx-auto px-4 py-16">
+          <div className="text-red-400">Une erreur est survenue lors de la vérification de votre abonnement.</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
       <NavButtons />
@@ -122,9 +134,11 @@ const Api = () => {
           <div className="text-gray-300">Chargement de votre clé API...</div>
         ) : apiKey?.api_key ? (
           <ApiKeyDisplay apiKey={DOMPurify.sanitize(apiKey.api_key)} />
-        ) : (
-          <div className="text-red-400">Erreur lors du chargement de la clé API</div>
-        )}
+        ) : apiKeyError ? (
+          <div className="text-red-400 mb-4">
+            {apiKeyError instanceof Error ? apiKeyError.message : "Erreur lors du chargement de la clé API"}
+          </div>
+        ) : null}
 
         <h2 className="text-2xl font-semibold text-white mb-4">Documentation</h2>
         <ApiDocumentation />
