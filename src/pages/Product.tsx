@@ -29,7 +29,7 @@ const Product = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-7xl mx-auto">
           <PricingPlan 
             name="Gratuit" 
             price="0" 
@@ -57,10 +57,25 @@ const Product = () => {
             priceId="price_1QTaXfEeS2EtyeTMzMA5ts9U"
           />
           <PricingPlan 
+            name="Pro" 
+            price="49.99" 
+            period="€/mois"
+            variant="default"
+            buttonText="Contacter les ventes"
+            features={[
+              { text: "Tout le plan Standard" },
+              { text: "API Access" },
+              { text: "Support dédié 24/7" },
+              { text: "Exports illimités" },
+              { text: "Personnalisation avancée" }
+            ]}
+            priceId="price_1QTaXPEeS2EtyeTMAfT6QyVE"
+          />
+          <PricingPlan 
             name="API Lifetime" 
-            price="499.99" 
+            price="119.99" 
             period="€"
-            variant="lifetime"
+            variant="default"
             buttonText="Accès à vie"
             features={[
               { text: "Accès API illimité" },
