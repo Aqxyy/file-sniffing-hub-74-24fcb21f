@@ -39,6 +39,9 @@ const PricingPlan = ({
   const handleSubscribe = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      
+      console.log("Checking session:", session);
+      
       if (!session?.access_token) {
         toast("Erreur", {
           description: "Vous devez être connecté pour souscrire"
@@ -48,31 +51,26 @@ const PricingPlan = ({
 
       console.log("Creating checkout session with price ID:", priceId);
       console.log("User ID:", session.user.id);
+      console.log("Access Token:", session.access_token);
 
-      const response = await fetch("https://dihvcgtshzhuwnfxhfnu.supabase.co/functions/v1/create-checkout-session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
+      const response = await supabase.functions.invoke('create-checkout-session', {
+        body: {
           priceId: priceId,
           userId: session.user.id,
-        }),
+        }
       });
 
-      console.log("Checkout response status:", response.status);
+      console.log("Checkout response:", response);
 
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error("Checkout error:", errorData);
-        throw new Error("Erreur lors de la création de la session de paiement");
+      if (response.error) {
+        console.error("Checkout error:", response.error);
+        throw new Error(response.error.message || "Erreur lors de la création de la session de paiement");
       }
 
-      const data = await response.json();
-      console.log("Checkout session created:", data);
+      const data = response.data;
+      console.log("Checkout session data:", data);
 
-      if (data.url) {
+      if (data?.url) {
         window.location.href = data.url;
       } else {
         throw new Error("URL de paiement manquante");
