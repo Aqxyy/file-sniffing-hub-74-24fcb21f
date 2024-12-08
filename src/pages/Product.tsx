@@ -4,10 +4,34 @@ import PricingPlan from "@/components/pricing/PricingPlan";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 
 const Product = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Fetch current subscription status
+  const { data: subscription } = useQuery({
+    queryKey: ['subscription', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('plan_type, status, api_access')
+        .eq('user_id', user.id)
+        .single();
+        
+      if (error) {
+        console.error('Error fetching subscription:', error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: !!user?.id
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
@@ -41,6 +65,7 @@ const Product = () => {
               { text: "Support basique" }
             ]}
             buttonText=""
+            currentPlan={subscription?.plan_type === 'free'}
           />
           <PricingPlan 
             name="Standard" 
@@ -55,6 +80,7 @@ const Product = () => {
               { text: "Accès aux bases premium" }
             ]}
             priceId="price_1QTZHvEeS2EtyeTMNWeSozYu"
+            currentPlan={subscription?.plan_type === 'standard'}
           />
           <PricingPlan 
             name="Pro" 
@@ -70,6 +96,7 @@ const Product = () => {
               { text: "Personnalisation avancée" }
             ]}
             priceId="price_1QTZHIEeS2EtyeTMIobx6y3O"
+            currentPlan={subscription?.plan_type === 'pro'}
           />
           <PricingPlan 
             name="API Lifetime" 
@@ -85,6 +112,7 @@ const Product = () => {
               { text: "Personnalisation avancée" }
             ]}
             priceId="price_1QTZwZEeS2EtyeTMcYOFcClK"
+            currentPlan={subscription?.plan_type === 'lifetime' && subscription?.api_access}
           />
         </div>
 
