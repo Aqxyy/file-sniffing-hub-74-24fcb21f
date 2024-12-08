@@ -3,6 +3,7 @@ import { CheckIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 interface PricingFeature {
   text: string;
@@ -29,7 +30,7 @@ const PricingPlan = ({
     { text: "Résultats complets visibles" },
     { text: "Support par email" }
   ],
-  buttonText = "Commencer",
+  buttonText = "S'abonner avec PayPal",
   variant = "default",
   className = "",
   priceId = "",
@@ -41,21 +42,19 @@ const PricingPlan = ({
       const order = await actions.order.capture();
       console.log("PayPal order completed:", order);
       
-      // Ici nous pouvons ajouter la logique pour mettre à jour l'abonnement dans Supabase
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id) {
         toast.error("Erreur d'authentification");
         return;
       }
 
-      // Mettre à jour l'abonnement dans la base de données
       const { error } = await supabase
         .from('subscriptions')
         .upsert({
           user_id: session.user.id,
           plan_type: name.toLowerCase(),
           status: 'active',
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // +30 jours
+          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         });
 
       if (error) {
@@ -94,7 +93,6 @@ const PricingPlan = ({
     }
   };
 
-  // Convertir le prix en nombre pour PayPal
   const priceNumber = parseFloat(price.replace(',', '.'));
 
   return (
@@ -117,32 +115,49 @@ const PricingPlan = ({
         ))}
       </ul>
       {buttonText && name !== "Gratuit" && (
-        <PayPalScriptProvider options={{ 
-          "client-id": "AZDxjDScFpQtjWTOUtWKbyN_bDt4OgqaF4eYXlewfBP4-8aqX3PiV8e1GWU6liB2CUXlkA59kJXE7M6R",
-          currency: "EUR" 
-        }}>
-          <PayPalButtons
-            style={{ layout: "horizontal" }}
-            createOrder={(data, actions) => {
-              return actions.order.create({
-                purchase_units: [
-                  {
-                    amount: {
-                      value: priceNumber.toString(),
-                      currency_code: "EUR"
-                    },
-                    description: `Abonnement ${name}`
-                  }
-                ]
-              });
-            }}
-            onApprove={handlePaypalApprove}
-            onError={(err) => {
-              console.error("PayPal Error:", err);
-              toast.error("Une erreur est survenue avec PayPal");
-            }}
-          />
-        </PayPalScriptProvider>
+        <div>
+          <Button 
+            className={`w-full mb-4 ${getButtonClass()}`}
+            onClick={() => document.getElementById(`paypal-button-${name}`)?.click()}
+          >
+            <img 
+              src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png" 
+              alt="PayPal" 
+              className="h-5 mr-2"
+            />
+            {buttonText}
+          </Button>
+          <div className="hidden">
+            <PayPalScriptProvider options={{ 
+              clientId: "AZDxjDScFpQtjWTOUtWKbyN_bDt4OgqaF4eYXlewfBP4-8aqX3PiV8e1GWU6liB2CUXlkA59kJXE7M6R",
+              currency: "EUR" 
+            }}>
+              <PayPalButtons
+                id={`paypal-button-${name}`}
+                style={{ layout: "horizontal" }}
+                createOrder={(data, actions) => {
+                  return actions.order.create({
+                    intent: "CAPTURE",
+                    purchase_units: [
+                      {
+                        amount: {
+                          value: priceNumber.toString(),
+                          currency_code: "EUR"
+                        },
+                        description: `Abonnement ${name}`
+                      }
+                    ]
+                  });
+                }}
+                onApprove={handlePaypalApprove}
+                onError={(err) => {
+                  console.error("PayPal Error:", err);
+                  toast.error("Une erreur est survenue avec PayPal");
+                }}
+              />
+            </PayPalScriptProvider>
+          </div>
+        </div>
       )}
     </div>
   );
