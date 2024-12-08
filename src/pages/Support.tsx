@@ -1,14 +1,25 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, ArrowLeft } from "lucide-react";
 import NavButtons from "@/components/NavButtons";
+import { useNavigate } from "react-router-dom";
 
 const Support = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
       <NavButtons />
       <div className="container mx-auto px-4 py-16">
+        <Button 
+          variant="ghost" 
+          className="text-white mb-4"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Retour
+        </Button>
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold text-white mb-8">Centre d'aide</h1>
 

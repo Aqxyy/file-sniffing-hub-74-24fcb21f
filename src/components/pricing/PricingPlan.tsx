@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { CheckIcon } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 interface PricingFeature {
   text: string;
@@ -14,6 +16,7 @@ interface PricingPlanProps {
   buttonText?: string;
   variant?: "default" | "popular" | "lifetime";
   className?: string;
+  priceId?: string;
 }
 
 const PricingPlan = ({
@@ -21,15 +24,59 @@ const PricingPlan = ({
   price = "29.99",
   period = "/mois",
   features = [
-    { text: "Fonctionnalité 1" },
-    { text: "Fonctionnalité 2" },
-    { text: "Fonctionnalité 3" }
+    { text: "Recherches illimitées" },
+    { text: "Résultats complets visibles" },
+    { text: "Support par email" }
   ],
-  onSubscribe = () => console.log("Abonnement"),
   buttonText = "Commencer",
   variant = "default",
   className = "",
+  priceId = "",
 }: PricingPlanProps) => {
+  const { toast } = useToast();
+
+  const handleSubscribe = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast({
+          title: "Erreur",
+          description: "Vous devez être connecté pour souscrire",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const response = await fetch("https://dihvcgtshzhuwnfxhfnu.supabase.co/functions/v1/create-checkout-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          priceId: priceId,
+          userId: session.user.id,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la création de la session de paiement");
+      }
+
+      const { url } = await response.json();
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error("Erreur de paiement:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la redirection vers le paiement",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getBackgroundClass = () => {
     switch (variant) {
       case "popular":
@@ -72,7 +119,7 @@ const PricingPlan = ({
         ))}
       </ul>
       <Button
-        onClick={onSubscribe}
+        onClick={handleSubscribe}
         className={`w-full ${getButtonClass()}`}
       >
         {buttonText}

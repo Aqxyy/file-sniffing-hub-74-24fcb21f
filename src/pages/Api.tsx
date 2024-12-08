@@ -1,12 +1,15 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Code2, Lock } from "lucide-react";
+import { Code2, Lock, ArrowLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import NavButtons from "@/components/NavButtons";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Api = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const { data: subscription } = useQuery({
     queryKey: ["subscription"],
@@ -39,6 +42,14 @@ const Api = () => {
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
         <NavButtons />
         <div className="container mx-auto px-4 py-16">
+          <Button 
+            variant="ghost" 
+            className="text-white mb-4"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Retour
+          </Button>
           <h1 className="text-4xl font-bold text-white mb-4">Accès requis</h1>
           <p className="text-gray-300 mb-4">Vous devez être abonné pour accéder à cette section.</p>
           <Link to="/product">
@@ -55,6 +66,14 @@ const Api = () => {
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
       <NavButtons />
       <div className="container mx-auto px-4 py-16">
+        <Button 
+          variant="ghost" 
+          className="text-white mb-4"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Retour
+        </Button>
         <h1 className="text-4xl font-bold text-white mb-4">Documentation de l'API</h1>
         <p className="text-gray-300 mb-4">Voici la documentation de notre API.</p>
         <h2 className="text-2xl font-semibold text-white mb-2">Endpoints</h2>
