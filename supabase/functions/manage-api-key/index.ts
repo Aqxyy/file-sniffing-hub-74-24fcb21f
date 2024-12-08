@@ -4,28 +4,49 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.1'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, {
+      headers: {
+        ...corsHeaders,
+        'Access-Control-Max-Age': '86400',
+      }
+    });
   }
 
   try {
+    // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const authHeader = req.headers.get('Authorization')!
+    // Get authorization header
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      console.error("No authorization header")
+      throw new Error('No authorization header')
+    }
+
+    // Get user from token
     const token = authHeader.replace('Bearer ', '')
-    
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
-    console.log("User data:", user?.id, user?.email)
+    
+    console.log("Checking user:", user?.email)
 
     if (userError || !user) {
       console.error("Auth error:", userError)
-      throw new Error('Unauthorized')
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401
+        }
+      )
     }
 
     // Check if user is admin first
@@ -51,22 +72,35 @@ serve(async (req) => {
     
     if (subError) {
       console.error("Subscription fetch error:", subError)
-      throw new Error('Error fetching subscription')
+      return new Response(
+        JSON.stringify({ error: 'Error fetching subscription' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500
+        }
+      )
     }
 
     if (!subscription) {
       console.error("No active subscription found for user:", user.id)
-      throw new Error('No active subscription found')
+      return new Response(
+        JSON.stringify({ error: 'No active subscription found' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403
+        }
+      )
     }
 
     if (!['pro', 'lifetime'].includes(subscription.plan_type)) {
       console.error("Invalid plan type:", subscription.plan_type)
-      throw new Error('Subscription plan does not include API access')
-    }
-
-    if (!subscription.api_access) {
-      console.error("API access not enabled for subscription:", subscription.id)
-      throw new Error('API access not enabled for this subscription')
+      return new Response(
+        JSON.stringify({ error: 'Subscription plan does not include API access' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403
+        }
+      )
     }
 
     // Check global API status
@@ -79,21 +113,28 @@ serve(async (req) => {
 
     if (settingsError) {
       console.error("Site settings error:", settingsError)
-      throw settingsError
+      return new Response(
+        JSON.stringify({ error: 'Error checking API status' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500
+        }
+      )
     }
 
     if (!siteSettings?.api_enabled) {
       console.error("Global API access is disabled")
-      throw new Error('API access is currently disabled')
+      return new Response(
+        JSON.stringify({ error: 'API access is currently disabled' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403
+        }
+      )
     }
 
     // Generate API key
-    const timestamp = Date.now().toString(36)
-    const randomBytes = Array.from(crypto.getRandomValues(new Uint8Array(16)))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('')
-    
-    const apiKey = `sk_${timestamp}_${randomBytes}`
+    const apiKey = `sk_${crypto.randomUUID()}`
 
     return new Response(
       JSON.stringify({ api_key: apiKey }),
@@ -106,7 +147,7 @@ serve(async (req) => {
       JSON.stringify({ error: error.message }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
+        status: 500
       }
     )
   }
