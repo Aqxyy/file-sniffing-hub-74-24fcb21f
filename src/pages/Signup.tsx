@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { Database, Lock } from "lucide-react";
+import { Database } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Signup = () => {
@@ -23,11 +23,12 @@ const Signup = () => {
     
     setIsLoading(true);
     try {
+      console.log("Tentative d'inscription avec:", { email });
       await signUp(email, password);
       toast.success("Compte créé avec succès ! Veuillez vous connecter.");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur d'inscription:", error);
-      toast.error("Erreur lors de l'inscription");
+      toast.error(error.message || "Erreur lors de l'inscription");
     } finally {
       setIsLoading(false);
     }
