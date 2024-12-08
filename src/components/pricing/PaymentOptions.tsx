@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface PaymentOptionsProps {
   priceNumber: number;
@@ -14,6 +14,12 @@ interface PaymentOptionsProps {
 const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: PaymentOptionsProps) => {
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [scriptError, setScriptError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Reset error state when component mounts
+    setScriptError(null);
+    setScriptLoaded(false);
+  }, []);
 
   const handlePaypalApprove = async (data: any, actions: any) => {
     try {
@@ -57,7 +63,8 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
           currency: "EUR",
           intent: "capture",
           components: "buttons",
-          "enable-funding": "paylater,card"
+          "enable-funding": "paylater,card",
+          "disable-funding": "credit"
         }}
       >
         <div className="min-h-[150px] relative">
@@ -67,6 +74,7 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
             </div>
           ) : (
             <PayPalButtons
+              forceReRender={[priceNumber]}
               style={{ 
                 layout: "horizontal",
                 shape: "rect",
