@@ -120,11 +120,6 @@ const PricingPlan = ({
             className={`w-full mb-4 ${getButtonClass()}`}
             onClick={() => document.getElementById(`paypal-button-${name}`)?.click()}
           >
-            <img 
-              src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png" 
-              alt="PayPal" 
-              className="h-5 mr-2"
-            />
             {buttonText}
           </Button>
           <div className="hidden">
@@ -133,7 +128,6 @@ const PricingPlan = ({
               currency: "EUR" 
             }}>
               <PayPalButtons
-                id={`paypal-button-${name}`}
                 style={{ layout: "horizontal" }}
                 createOrder={(data, actions) => {
                   return actions.order.create({
