@@ -75,7 +75,7 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
     <div className="w-full space-y-4">
       <PayPalScriptProvider 
         options={{ 
-          clientId: "AQSK9-m4vRwgDgQwhSipOw56fmMZJPSTWdBeUllYIFIqVSVLUDec_aGnaqnOC-6bKpYRaS68DPaZGnts",
+          clientId: "AZDxjDScFpQtjWTOUtWKbyN_bDt4OgqaF4eYXlewfBP4-8aqX3PiV8e1GWU6liB2CUXlkA59kJXE7M6R",
           currency: "EUR",
           intent: "capture",
           components: "buttons"
