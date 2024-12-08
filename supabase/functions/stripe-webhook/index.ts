@@ -40,26 +40,37 @@ serve(async (req) => {
         const session = event.data.object
         console.log('Checkout session completed:', session.id)
 
-        // Get subscription details
-        const subscription = await stripe.subscriptions.retrieve(session.subscription)
-        
-        // Update or create subscription record
-        const { error } = await supabase
-          .from('subscriptions')
-          .upsert({
+        // Handle both subscription and one-time payments
+        let subscriptionData
+        if (session.mode === 'subscription') {
+          const subscription = await stripe.subscriptions.retrieve(session.subscription)
+          subscriptionData = {
             user_id: session.client_reference_id,
             stripe_subscription_id: subscription.id,
-            plan_type: subscription.items.data[0].price.id === 'price_1QTZHvEeS2EtyeTMNWeSozYu' ? 'pro' : 'standard',
+            plan_type: subscription.items.data[0].price.id === 'price_1QTaXfEeS2EtyeTMzMA5ts9U' ? 'pro' : 'standard',
             status: subscription.status,
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-          })
+          }
+        } else if (session.mode === 'payment') {
+          // Handle lifetime subscription (one-time payment)
+          subscriptionData = {
+            user_id: session.client_reference_id,
+            stripe_subscription_id: session.payment_intent,
+            plan_type: 'lifetime',
+            status: 'active',
+            current_period_end: null, // Lifetime subscription never expires
+          }
+        }
 
-        if (error) {
-          console.error('Error updating subscription:', error)
-          return new Response(JSON.stringify({ error: 'Error updating subscription' }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
+        if (subscriptionData) {
+          const { error } = await supabase
+            .from('subscriptions')
+            .upsert(subscriptionData)
+
+          if (error) {
+            console.error('Error updating subscription:', error)
+            throw error
+          }
         }
         break
       }
@@ -79,10 +90,7 @@ serve(async (req) => {
 
         if (error) {
           console.error('Error updating subscription:', error)
-          return new Response(JSON.stringify({ error: 'Error updating subscription' }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
+          throw error
         }
         break
       }
