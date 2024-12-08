@@ -1,5 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import NavButtons from "@/components/NavButtons";
@@ -62,7 +62,7 @@ const Api = () => {
   });
 
   // Fetch API key only if user has valid subscription or is admin
-  const { data: apiKey, isLoading: isLoadingApiKey } = useQuery({
+  const { data: apiKey, isLoading: isLoadingApiKey, refetch: refetchApiKey } = useQuery({
     queryKey: ["api-key", user?.id],
     queryFn: async () => {
       console.log("Fetching API key...");
@@ -91,6 +91,30 @@ const Api = () => {
       apiStatus?.api_enabled === true
     ),
     retry: false,
+    staleTime: Infinity, // Ne pas refetch automatiquement
+  });
+
+  // Mutation pour régénérer la clé API
+  const { mutate: regenerateApiKey, isPending: isRegenerating } = useMutation({
+    mutationFn: async () => {
+      const response = await supabase.functions.invoke('manage-api-key', {
+        method: 'POST',
+        body: { action: 'regenerate' }
+      });
+      
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to regenerate API key");
+      }
+      
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Clé API régénérée avec succès");
+      refetchApiKey();
+    },
+    onError: (error) => {
+      toast.error(`Erreur lors de la régénération de la clé API: ${error.message}`);
+    }
   });
 
   const isAdmin = user?.email === "williamguerif@gmail.com";
@@ -144,7 +168,11 @@ const Api = () => {
         {isLoadingApiKey ? (
           <div className="text-gray-300">Chargement de votre clé API...</div>
         ) : apiKey?.api_key ? (
-          <ApiKeyDisplay apiKey={DOMPurify.sanitize(apiKey.api_key)} />
+          <ApiKeyDisplay 
+            apiKey={DOMPurify.sanitize(apiKey.api_key)} 
+            onRegenerateKey={() => regenerateApiKey()}
+            isRegenerating={isRegenerating}
+          />
         ) : (
           <div className="text-red-400 mb-4">
             Impossible de récupérer votre clé API. Veuillez vérifier votre abonnement ou contacter le support.
