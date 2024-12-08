@@ -26,6 +26,7 @@ const Product = () => {
           <PricingPlan 
             name="Plan Starter" 
             price="9.99" 
+            period="/mois"
             variant="default"
             features={[
               { text: "50 recherches par jour" },
@@ -37,6 +38,7 @@ const Product = () => {
           <PricingPlan 
             name="Plan Pro" 
             price="29.99" 
+            period="/mois"
             variant="popular"
             features={[
               { text: "Recherches illimitées" },
@@ -49,7 +51,7 @@ const Product = () => {
           <PricingPlan 
             name="API Lifetime" 
             price="119" 
-            period=""
+            period="/Lifetime"
             variant="lifetime"
             features={[
               { text: "Accès API illimité" },
