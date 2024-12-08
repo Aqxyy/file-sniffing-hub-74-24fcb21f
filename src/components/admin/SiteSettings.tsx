@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import ApiSettings from "./ApiSettings";
+import { Switch } from "@/components/ui/switch";
 
 export const SiteSettings = () => {
   const [apiEnabled, setApiEnabled] = useState(true);
@@ -87,23 +88,18 @@ export const SiteSettings = () => {
         apiEnabled={apiEnabled}
         onToggleApi={toggleApiStatus}
       />
-      <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
-        <div>
-          <h3 className="text-lg font-medium text-white">Mode Maintenance</h3>
-          <p className="text-sm text-gray-400">
-            Active/désactive le mode maintenance du site
-          </p>
+      <div className="bg-gray-800/50 rounded-lg p-6">
+        <h2 className="text-xl font-semibold text-white mb-4">Mode Maintenance</h2>
+        <div className="flex items-center space-x-4">
+          <span className="text-white">Mode Maintenance</span>
+          <Switch checked={maintenanceMode} onCheckedChange={toggleMaintenanceMode} />
+          <span className="text-gray-400">
+            {maintenanceMode ? 'Activé' : 'Désactivé'}
+          </span>
         </div>
-        <button
-          onClick={toggleMaintenanceMode}
-          className={`px-4 py-2 rounded-md transition-colors ${
-            maintenanceMode 
-              ? 'bg-red-600 hover:bg-red-700 text-white' 
-              : 'bg-green-600 hover:bg-green-700 text-white'
-          }`}
-        >
-          {maintenanceMode ? 'Désactiver' : 'Activer'}
-        </button>
+        <p className="text-gray-400 mt-2 text-sm">
+          Active ou désactive le mode maintenance du site
+        </p>
       </div>
     </div>
   );

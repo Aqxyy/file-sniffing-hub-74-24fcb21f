@@ -37,6 +37,9 @@ const PricingPlan = ({
   const [isProcessing, setIsProcessing] = useState(false);
 
   const getBackgroundClass = () => {
+    if (currentPlan) {
+      return "bg-gray-800/50 border-green-500 border-2";
+    }
     switch (variant) {
       case "popular":
         return "bg-gray-800/50 border-blue-500 border-2";
