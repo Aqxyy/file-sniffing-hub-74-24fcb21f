@@ -83,7 +83,6 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
                   paypal: {
                     experience_context: {
                       payment_method_preference: "IMMEDIATE_PAYMENT_REQUIRED",
-                      payment_method_selected: "PAYPAL",
                       brand_name: "Votre Site",
                       locale: "fr-FR",
                       landing_page: "LOGIN",
