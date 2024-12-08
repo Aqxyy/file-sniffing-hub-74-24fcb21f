@@ -7,6 +7,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -19,13 +20,17 @@ serve(async (req) => {
 
     const authHeader = req.headers.get('Authorization')!
     const token = authHeader.replace('Bearer ', '')
+    
+    // Get user data
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
+    console.log("User data:", user?.id)
 
     if (userError || !user) {
+      console.error("Auth error:", userError)
       throw new Error('Unauthorized')
     }
 
-    // Vérifier si l'utilisateur a un abonnement actif et valide
+    // Check subscription status with detailed logging
     const { data: subscription, error: subError } = await supabaseClient
       .from('subscriptions')
       .select('*')
@@ -33,7 +38,14 @@ serve(async (req) => {
       .eq('status', 'active')
       .single()
 
-    if (subError || !subscription) {
+    console.log("Subscription data:", subscription)
+    
+    if (subError) {
+      console.error("Subscription fetch error:", subError)
+      throw new Error('Error fetching subscription')
+    }
+
+    if (!subscription) {
       throw new Error('No active subscription found')
     }
 
@@ -41,18 +53,27 @@ serve(async (req) => {
       throw new Error('Subscription plan does not include API access')
     }
 
-    // Vérifier si l'API est activée globalement
+    // Check if API access is enabled for this subscription
+    if (!subscription.api_access) {
+      throw new Error('API access not enabled for this subscription')
+    }
+
+    // Check global API status
     const { data: siteSettings, error: settingsError } = await supabaseClient
       .from('site_settings')
       .select('api_enabled')
       .single()
 
-    if (settingsError) throw settingsError
+    if (settingsError) {
+      console.error("Site settings error:", settingsError)
+      throw settingsError
+    }
+
     if (!siteSettings?.api_enabled) {
       throw new Error('API access is currently disabled')
     }
 
-    // Générer une clé API simple (à améliorer en production)
+    // Generate API key
     const apiKey = `sk_${crypto.randomUUID()}`
 
     return new Response(
@@ -66,6 +87,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
+    console.error("Function error:", error.message)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
