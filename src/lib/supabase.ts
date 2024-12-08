@@ -15,7 +15,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
     url: supabaseUrl ? 'défini' : 'manquant',
     key: supabaseAnonKey ? 'défini' : 'manquant'
   });
-  throw new Error('Variables d\'environnement Supabase manquantes. Assurez-vous que l\'intégration Supabase est bien configurée dans Lovable.');
+  throw new Error('Variables d\'environnement Supabase manquantes. Veuillez vérifier que :\n1. L\'intégration Supabase est activée dans Lovable\n2. Vous êtes bien connecté à votre projet Supabase\n3. Les variables d\'environnement sont bien injectées');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
