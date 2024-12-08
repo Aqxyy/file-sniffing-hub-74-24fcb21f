@@ -29,6 +29,7 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          api_access: boolean | null
           created_at: string | null
           current_period_end: string | null
           id: string
@@ -38,6 +39,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          api_access?: boolean | null
           created_at?: string | null
           current_period_end?: string | null
           id?: string
@@ -47,6 +49,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          api_access?: boolean | null
           created_at?: string | null
           current_period_end?: string | null
           id?: string
