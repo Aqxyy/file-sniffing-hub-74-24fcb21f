@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { useState } from "react";
 
 interface PaymentOptionsProps {
   priceNumber: number;
@@ -11,6 +12,9 @@ interface PaymentOptionsProps {
 }
 
 const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: PaymentOptionsProps) => {
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [scriptError, setScriptError] = useState<string | null>(null);
+
   const handlePaypalApprove = async (data: any, actions: any) => {
     try {
       const order = await actions.order.capture();
@@ -52,58 +56,65 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
           clientId: "AZDxjDScFpQtjWTOUtWKbyN_bDt4OgqaF4eYXlewfBP4-8aqX3PiV8e1GWU6liB2CUXlkA59kJXE7M6R",
           currency: "EUR",
           intent: "capture",
-          components: "buttons",
+          components: "buttons,funding-eligibility",
           "enable-funding": "paylater,card",
-          "data-namespace": "PayPalSDK"
+          "disable-funding": "credit",
+        }}
+        onError={(err) => {
+          console.error("PayPal Script error:", err);
+          setScriptError(err.message);
+          toast.error("Erreur lors du chargement de PayPal");
         }}
       >
         <div className="min-h-[150px] relative">
-          <PayPalButtons
-            style={{ 
-              layout: "horizontal",
-              shape: "rect",
-              color: "gold",
-              height: 55
-            }}
-            disabled={isProcessing}
-            createOrder={(data, actions) => {
-              console.log("Creating PayPal order...");
-              return actions.order.create({
-                intent: "CAPTURE",
-                purchase_units: [
-                  {
-                    amount: {
-                      value: priceNumber.toString(),
-                      currency_code: "EUR"
-                    },
-                    description: `Abonnement ${planName}`
-                  }
-                ],
-                payment_source: {
-                  paypal: {
-                    experience_context: {
-                      payment_method_preference: "IMMEDIATE_PAYMENT_REQUIRED",
-                      brand_name: "Votre Site",
-                      locale: "fr-FR",
-                      landing_page: "LOGIN",
-                      shipping_preference: "NO_SHIPPING",
-                      user_action: "PAY_NOW"
+          {scriptError ? (
+            <div className="text-red-500 text-center p-4">
+              Une erreur est survenue lors du chargement de PayPal. Veuillez réessayer.
+            </div>
+          ) : (
+            <PayPalButtons
+              style={{ 
+                layout: "horizontal",
+                shape: "rect",
+                color: "gold",
+                height: 55
+              }}
+              disabled={isProcessing}
+              onInit={() => {
+                console.log("PayPal Buttons initialized");
+                setScriptLoaded(true);
+              }}
+              createOrder={(data, actions) => {
+                console.log("Creating PayPal order...");
+                return actions.order.create({
+                  purchase_units: [
+                    {
+                      amount: {
+                        value: priceNumber.toString(),
+                        currency_code: "EUR"
+                      },
+                      description: `Abonnement ${planName}`
                     }
-                  }
-                }
-              });
-            }}
-            onApprove={handlePaypalApprove}
-            onError={(err) => {
-              console.error("PayPal Error:", err);
-              toast.error("Une erreur est survenue avec PayPal");
-            }}
-            onCancel={() => {
-              console.log("Payment cancelled");
-              toast.info("Paiement annulé");
-              onCancel();
-            }}
-          />
+                  ]
+                });
+              }}
+              onApprove={handlePaypalApprove}
+              onError={(err) => {
+                console.error("PayPal Error:", err);
+                toast.error("Une erreur est survenue avec PayPal");
+              }}
+              onCancel={() => {
+                console.log("Payment cancelled");
+                toast.info("Paiement annulé");
+                onCancel();
+              }}
+            />
+          )}
+          {!scriptLoaded && !scriptError && (
+            <div className="text-center p-4">
+              Chargement de PayPal...
+            </div>
+          )}
         </div>
         <Button 
           variant="outline"
