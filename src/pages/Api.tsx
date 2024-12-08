@@ -19,15 +19,19 @@ const Api = () => {
   const { data: apiStatus } = useQuery({
     queryKey: ["api-status"],
     queryFn: async () => {
+      console.log("Fetching API status...");
       const { data, error } = await supabase
         .from('site_settings')
         .select('api_enabled')
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
       
       if (error) {
         console.error("Error fetching API status:", error);
         throw error;
       }
+      console.log("API status data:", data);
       return data;
     },
   });
