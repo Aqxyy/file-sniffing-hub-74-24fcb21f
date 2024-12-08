@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
-import { getSupabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -21,7 +21,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     console.log("AuthProvider: Initializing auth state");
-    const supabase = getSupabase();
     
     // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -36,12 +35,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       
       if (event === 'SIGNED_IN') {
-        navigate('/');
+        if (session?.user.email_confirmed_at) {
+          navigate('/');
+        } else {
+          toast.warning("Veuillez vérifier votre email avant de continuer");
+          navigate('/login');
+        }
       } else if (event === 'SIGNED_OUT') {
         navigate('/login');
       } else if (event === 'USER_UPDATED') {
-        // Handle email verification
-        if (session?.user.confirmed_at) {
+        if (session?.user.email_confirmed_at) {
           toast.success("Email vérifié avec succès !");
           navigate('/');
         }
@@ -53,20 +56,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     console.log("AuthProvider: Attempting sign in", email);
-    const supabase = getSupabase();
-    const { error, data } = await supabase.auth.signInWithPassword({ email, password });
+    const { error, data } = await supabase.auth.signInWithPassword({ 
+      email: email.toLowerCase().trim(), 
+      password 
+    });
+    
     if (error) {
       console.error("AuthProvider: Sign in error", error);
       throw error;
     }
+    
+    if (!data.user.email_confirmed_at) {
+      toast.error("Veuillez vérifier votre email avant de vous connecter");
+      throw new Error("Email non vérifié");
+    }
+    
     console.log("AuthProvider: Sign in successful", data.user?.email);
   };
 
   const signUp = async (email: string, password: string) => {
     console.log("AuthProvider: Attempting sign up", email);
-    const supabase = getSupabase();
     const { error, data } = await supabase.auth.signUp({
-      email,
+      email: email.toLowerCase().trim(),
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
@@ -84,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     console.log("AuthProvider: Sign up successful", data);
     
-    if (data.user && !data.user.confirmed_at) {
+    if (data.user && !data.user.email_confirmed_at) {
       toast.success("Un email de confirmation vous a été envoyé. Veuillez vérifier votre boîte de réception.");
       navigate('/login');
     }
@@ -92,7 +103,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     console.log("AuthProvider: Attempting sign out");
-    const supabase = getSupabase();
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error("AuthProvider: Sign out error", error);

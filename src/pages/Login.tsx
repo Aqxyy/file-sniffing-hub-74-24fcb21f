@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Database } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import DOMPurify from 'dompurify';
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -17,7 +18,8 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await signIn(email, password);
+      const sanitizedEmail = DOMPurify.sanitize(email);
+      await signIn(sanitizedEmail, password);
       toast.success("Connexion réussie");
     } catch (error: any) {
       console.error("Login error:", error);
@@ -25,6 +27,10 @@ const Login = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(DOMPurify.sanitize(e.target.value));
   };
 
   return (
@@ -50,9 +56,10 @@ const Login = () => {
                 type="email"
                 placeholder="Email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
                 className="w-full bg-gray-900/50 border-gray-700 text-white placeholder:text-gray-500"
                 required
+                autoComplete="email"
               />
             </div>
             <div>
@@ -63,6 +70,7 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-gray-900/50 border-gray-700 text-white placeholder:text-gray-500"
                 required
+                autoComplete="current-password"
               />
             </div>
             <Button

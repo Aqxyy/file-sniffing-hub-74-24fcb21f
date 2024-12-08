@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Database } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import DOMPurify from 'dompurify';
 
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -21,17 +22,27 @@ const Signup = () => {
       return;
     }
     
+    if (password.length < 8) {
+      toast.error("Le mot de passe doit contenir au moins 8 caractères");
+      return;
+    }
+    
     setIsLoading(true);
     try {
-      console.log("Tentative d'inscription avec:", { email });
-      await signUp(email, password);
-      toast.success("Compte créé avec succès ! Veuillez vous connecter.");
+      const sanitizedEmail = DOMPurify.sanitize(email);
+      console.log("Tentative d'inscription avec:", { email: sanitizedEmail });
+      await signUp(sanitizedEmail, password);
+      toast.success("Compte créé avec succès ! Veuillez vérifier votre email.");
     } catch (error: any) {
       console.error("Erreur d'inscription:", error);
       toast.error(error.message || "Erreur lors de l'inscription");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(DOMPurify.sanitize(e.target.value));
   };
 
   return (
@@ -57,9 +68,10 @@ const Signup = () => {
                 type="email"
                 placeholder="Email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
                 className="w-full bg-gray-900/50 border-gray-700 text-white placeholder:text-gray-500"
                 required
+                autoComplete="email"
               />
             </div>
             <div>
@@ -70,6 +82,8 @@ const Signup = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-gray-900/50 border-gray-700 text-white placeholder:text-gray-500"
                 required
+                autoComplete="new-password"
+                minLength={8}
               />
             </div>
             <div>
@@ -80,6 +94,8 @@ const Signup = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full bg-gray-900/50 border-gray-700 text-white placeholder:text-gray-500"
                 required
+                autoComplete="new-password"
+                minLength={8}
               />
             </div>
             <Button
