@@ -108,6 +108,7 @@ serve(async (req) => {
         throw keyError;
       }
 
+      // Si une clé existe déjà, la retourner
       if (existingKey) {
         return new Response(
           JSON.stringify({ api_key: existingKey.key_value }),
@@ -115,7 +116,7 @@ serve(async (req) => {
         )
       }
 
-      // If no key exists, generate one
+      // Si aucune clé n'existe, en générer une nouvelle
       const newApiKey = `sk_${crypto.randomUUID()}`;
       const { error: insertError } = await supabaseClient
         .from('api_keys')
