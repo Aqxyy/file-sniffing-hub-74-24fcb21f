@@ -53,7 +53,8 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
           currency: "EUR",
           intent: "capture",
           components: "buttons",
-          "enable-funding": "paylater"
+          "enable-funding": "paylater,card",
+          "data-namespace": "PayPalSDK"
         }}
       >
         <div className="min-h-[150px] relative">
@@ -62,7 +63,7 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
               layout: "horizontal",
               shape: "rect",
               color: "gold",
-              label: "pay"
+              height: 55
             }}
             disabled={isProcessing}
             createOrder={(data, actions) => {
@@ -77,7 +78,20 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
                     },
                     description: `Abonnement ${planName}`
                   }
-                ]
+                ],
+                payment_source: {
+                  paypal: {
+                    experience_context: {
+                      payment_method_preference: "IMMEDIATE_PAYMENT_REQUIRED",
+                      payment_method_selected: "PAYPAL",
+                      brand_name: "Votre Site",
+                      locale: "fr-FR",
+                      landing_page: "LOGIN",
+                      shipping_preference: "NO_SHIPPING",
+                      user_action: "PAY_NOW"
+                    }
+                  }
+                }
               });
             }}
             onApprove={handlePaypalApprove}
