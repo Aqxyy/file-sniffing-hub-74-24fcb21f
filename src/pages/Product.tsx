@@ -32,7 +32,7 @@ const Product = () => {
               { text: "Résultats limités" },
               { text: "Support basique" }
             ]}
-            priceId="price_starter"
+            priceId="price_1OvPxlGPnRBnzxYPxRNBPGDR"
           />
           <PricingPlan 
             name="Plan Pro" 
@@ -44,7 +44,7 @@ const Product = () => {
               { text: "Support prioritaire" },
               { text: "API Access" }
             ]}
-            priceId="price_pro"
+            priceId="price_1OvPyKGPnRBnzxYPxvBDPGDR"
           />
           <PricingPlan 
             name="Plan Entreprise" 
@@ -56,7 +56,7 @@ const Product = () => {
               { text: "Formation personnalisée" },
               { text: "API illimitée" }
             ]}
-            priceId="price_enterprise"
+            priceId="price_1OvPyeGPnRBnzxYPxvBDPGDR"
           />
         </div>
       </div>
