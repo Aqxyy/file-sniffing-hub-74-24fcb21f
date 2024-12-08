@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { ArrowLeft } from "lucide-react";
 
 interface PaymentOptionsProps {
   priceNumber: number;
@@ -47,6 +48,15 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
 
   return (
     <div className="w-full space-y-4">
+      <Button 
+        variant="ghost" 
+        className="absolute top-4 left-4 text-white"
+        onClick={onCancel}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Retour
+      </Button>
+
       <PayPalScriptProvider options={{ 
         clientId: "AQSK9-m4vRwgDgQwhSipOw56fmMZJPSTWdBeUllYIFIqVSVLUDec_aGnaqnOC-6bKpYRaS68DPaZGnts",
         currency: "EUR",
@@ -56,7 +66,7 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
           style={{ 
             layout: "vertical",
             shape: "rect",
-            label: "subscribe"
+            label: "pay"
           }}
           disabled={isProcessing}
           createOrder={(data, actions) => {
@@ -83,14 +93,6 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
             onCancel();
           }}
         />
-        <Button 
-          variant="outline"
-          className="w-full"
-          onClick={onCancel}
-          disabled={isProcessing}
-        >
-          Retour
-        </Button>
       </PayPalScriptProvider>
     </div>
   );

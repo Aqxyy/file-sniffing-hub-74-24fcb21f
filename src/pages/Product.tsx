@@ -21,7 +21,7 @@ const Product = () => {
         .from('subscriptions')
         .select('plan_type, status, api_access')
         .eq('user_id', user.id)
-        .maybeSingle(); // Use maybeSingle instead of single
+        .maybeSingle();
         
       if (error) {
         console.error('Error fetching subscription:', error);
@@ -34,18 +34,17 @@ const Product = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
-      <NavButtons />
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 relative">
+      <Button 
+        variant="ghost" 
+        className="absolute top-4 left-4 text-white"
+        onClick={() => navigate(-1)}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Retour
+      </Button>
+
       <div className="container mx-auto px-4 py-16">
-        <Button 
-          variant="ghost" 
-          className="text-white mb-4"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Retour à la recherche
-        </Button>
-        
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-white mb-4">Choisissez votre plan</h1>
           <p className="text-gray-300 text-lg">
