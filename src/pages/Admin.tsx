@@ -52,6 +52,7 @@ const Admin = () => {
         console.error("API status fetch error:", error);
         throw error;
       }
+      
       console.log("API status data:", data);
       setApiEnabled(data?.api_enabled ?? true);
     } catch (error) {
@@ -64,11 +65,12 @@ const Admin = () => {
     try {
       console.log("Fetching users...");
       
+      // Updated query to use auth.users table
       const { data: subscriptions, error: subError } = await supabase
         .from('subscriptions')
         .select(`
           *,
-          users:user_id (
+          auth_users:user_id (
             email
           )
         `);
@@ -80,13 +82,13 @@ const Admin = () => {
 
       console.log("Fetched subscriptions:", subscriptions);
 
-      const formattedUsers = subscriptions.map(sub => ({
+      const formattedUsers = subscriptions?.map(sub => ({
         id: sub.user_id,
-        email: sub.users?.email || 'Email non disponible',
+        email: sub.auth_users?.email || 'Email non disponible',
         plan_type: sub.plan_type,
         status: sub.status,
         api_access: sub.api_access || false
-      }));
+      })) || [];
 
       setUsers(formattedUsers);
     } catch (error) {
