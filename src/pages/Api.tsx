@@ -10,9 +10,11 @@ const Api = () => {
   const { data: subscription } = useQuery({
     queryKey: ["subscription"],
     queryFn: async () => {
+      // Get the session token from localStorage
+      const token = localStorage.getItem('sb-token');
       const response = await fetch("https://dihvcgtshzhuwnfxhfnu.supabase.co/functions/v1/is-subscribed", {
         headers: {
-          Authorization: `Bearer ${user?.access_token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       if (!response.ok) throw new Error("Failed to fetch subscription status");
