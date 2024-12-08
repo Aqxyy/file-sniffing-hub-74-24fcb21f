@@ -2,23 +2,23 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Database, Lock } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  const { signIn } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
     try {
-      toast.info("Cette fonctionnalité sera bientôt disponible");
-      // TODO: Implement Supabase authentication
+      await signIn(email, password);
+      toast.success("Connexion réussie");
     } catch (error) {
       toast.error("Erreur lors de la connexion");
     } finally {
@@ -80,12 +80,6 @@ const Login = () => {
                 S'inscrire
               </Link>
             </p>
-            <button
-              onClick={() => toast.info("Cette fonctionnalité sera bientôt disponible")}
-              className="text-gray-400 hover:text-gray-300 text-sm mt-2"
-            >
-              Mot de passe oublié ?
-            </button>
           </div>
         </div>
       </motion.div>
