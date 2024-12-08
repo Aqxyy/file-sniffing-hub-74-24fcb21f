@@ -47,14 +47,15 @@ const Product = () => {
             priceId="price_1OvPyKGPnRBnzxYPxvBDPGDR"
           />
           <PricingPlan 
-            name="Plan Entreprise" 
-            price="99.99" 
+            name="API Lifetime" 
+            price="119" 
+            period=""
             variant="lifetime"
             features={[
-              { text: "Tout du plan Pro" },
-              { text: "Support dédié" },
-              { text: "Formation personnalisée" },
-              { text: "API illimitée" }
+              { text: "Accès API illimité" },
+              { text: "Support prioritaire" },
+              { text: "Accès à vie" },
+              { text: "Mises à jour gratuites" }
             ]}
             priceId="price_1OvPyeGPnRBnzxYPxvBDPGDR"
           />
