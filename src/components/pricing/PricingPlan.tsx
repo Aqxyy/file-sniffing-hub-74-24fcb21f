@@ -30,7 +30,7 @@ const PricingPlan = ({
     { text: "Résultats complets visibles" },
     { text: "Support par email" }
   ],
-  buttonText = "S'abonner avec PayPal",
+  buttonText = "S'abonner",
   variant = "default",
   className = "",
   priceId = "",
