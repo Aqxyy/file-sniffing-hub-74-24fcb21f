@@ -35,7 +35,6 @@ const Product = () => {
             price="0" 
             period="€"
             variant="default"
-            buttonText="Commencer"
             features={[
               { text: "10 recherches par jour" },
               { text: "Résultats limités" },
