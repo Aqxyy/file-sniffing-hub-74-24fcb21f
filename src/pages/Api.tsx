@@ -41,6 +41,7 @@ const Api = () => {
     queryKey: ["subscription", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
+      console.log("Fetching subscription for user:", user.id);
       
       const { data, error } = await supabase
         .from('subscriptions')
@@ -54,6 +55,7 @@ const Api = () => {
         return null;
       }
       
+      console.log("Subscription data:", data);
       return data;
     },
     enabled: !!user?.id,
@@ -63,6 +65,7 @@ const Api = () => {
   const { data: apiKey, isLoading: isLoadingApiKey } = useQuery({
     queryKey: ["api-key", user?.id],
     queryFn: async () => {
+      console.log("Fetching API key...");
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
         throw new Error("No access token found");
@@ -77,6 +80,7 @@ const Api = () => {
         throw new Error(response.error.message || "Failed to fetch API key");
       }
       
+      console.log("API key response:", response.data);
       return response.data;
     },
     enabled: !!user?.id && (

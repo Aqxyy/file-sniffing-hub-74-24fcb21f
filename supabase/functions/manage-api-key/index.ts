@@ -8,7 +8,7 @@ const corsHeaders = {
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -21,15 +21,16 @@ serve(async (req) => {
     const token = authHeader.replace('Bearer ', '')
     
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
-    console.log("User data:", user?.id)
+    console.log("User data:", user?.id, user?.email)
 
     if (userError || !user) {
       console.error("Auth error:", userError)
       throw new Error('Unauthorized')
     }
 
-    // Check if user is admin
+    // Check if user is admin first
     if (user.email === "williamguerif@gmail.com") {
+      console.log("Admin user detected, generating API key")
       const apiKey = `sk_${crypto.randomUUID()}`
       return new Response(
         JSON.stringify({ api_key: apiKey }),
@@ -37,7 +38,8 @@ serve(async (req) => {
       )
     }
 
-    // Check subscription status
+    // For non-admin users, check subscription status
+    console.log("Checking subscription for user:", user.id)
     const { data: subscription, error: subError } = await supabaseClient
       .from('subscriptions')
       .select('*')
@@ -71,6 +73,8 @@ serve(async (req) => {
     const { data: siteSettings, error: settingsError } = await supabaseClient
       .from('site_settings')
       .select('api_enabled')
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle()
 
     if (settingsError) {
@@ -83,7 +87,7 @@ serve(async (req) => {
       throw new Error('API access is currently disabled')
     }
 
-    // Generate API key with additional entropy
+    // Generate API key
     const timestamp = Date.now().toString(36)
     const randomBytes = Array.from(crypto.getRandomValues(new Uint8Array(16)))
       .map(b => b.toString(16).padStart(2, '0'))
@@ -101,8 +105,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
-        status: error.message === 'No active subscription found' ? 403 : 400 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400
       }
     )
   }
