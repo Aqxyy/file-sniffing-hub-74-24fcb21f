@@ -47,20 +47,23 @@ const Admin = () => {
 
   const fetchUsers = async () => {
     try {
+      console.log("Fetching users...");
+      
+      // First, get all subscriptions
       const { data: subscriptions, error: subError } = await supabase
         .from('subscriptions')
-        .select(`
-          *,
-          user:user_id (
-            email
-          )
-        `);
+        .select('*, user_email:user_id(email)');
 
-      if (subError) throw subError;
+      if (subError) {
+        console.error("Subscription fetch error:", subError);
+        throw subError;
+      }
+
+      console.log("Fetched subscriptions:", subscriptions);
 
       const formattedUsers = subscriptions.map(sub => ({
         id: sub.user_id,
-        email: sub.user.email,
+        email: sub.user_email?.email || 'Email non disponible',
         plan_type: sub.plan_type,
         status: sub.status,
         api_access: sub.api_access || false
