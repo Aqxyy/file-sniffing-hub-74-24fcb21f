@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { CheckIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 interface PricingFeature {
   text: string;
@@ -33,19 +34,20 @@ const PricingPlan = ({
   className = "",
   priceId = "",
 }: PricingPlanProps) => {
-  const { toast } = useToast();
+  const { toast: toastNotification } = useToast();
 
   const handleSubscribe = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
-        toast({
-          title: "Erreur",
-          description: "Vous devez être connecté pour souscrire",
-          variant: "destructive",
+        toast("Erreur", {
+          description: "Vous devez être connecté pour souscrire"
         });
         return;
       }
+
+      console.log("Creating checkout session with price ID:", priceId);
+      console.log("User ID:", session.user.id);
 
       const response = await fetch("https://dihvcgtshzhuwnfxhfnu.supabase.co/functions/v1/create-checkout-session", {
         method: "POST",
@@ -59,20 +61,26 @@ const PricingPlan = ({
         }),
       });
 
+      console.log("Checkout response status:", response.status);
+
       if (!response.ok) {
+        const errorData = await response.text();
+        console.error("Checkout error:", errorData);
         throw new Error("Erreur lors de la création de la session de paiement");
       }
 
-      const { url } = await response.json();
-      if (url) {
-        window.location.href = url;
+      const data = await response.json();
+      console.log("Checkout session created:", data);
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("URL de paiement manquante");
       }
     } catch (error) {
-      console.error("Erreur de paiement:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la redirection vers le paiement",
-        variant: "destructive",
+      console.error("Payment error:", error);
+      toast("Erreur", {
+        description: "Une erreur est survenue lors de la redirection vers le paiement"
       });
     }
   };
