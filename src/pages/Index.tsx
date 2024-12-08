@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import NavButtons from "@/components/NavButtons";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -53,34 +54,8 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
       <div className="container mx-auto px-4 py-16">
-        {/* Navigation Buttons */}
-        <div className="absolute top-4 left-4 flex gap-2">
-          <Link to="/product">
-            <Button 
-              variant="outline" 
-              className="bg-blue-900 text-white hover:bg-blue-800 border-blue-700"
-            >
-              Product
-            </Button>
-          </Link>
-          <Link to="/support">
-            <Button 
-              variant="outline" 
-              className="bg-blue-900 text-white hover:bg-blue-800 border-blue-700"
-            >
-              Support
-            </Button>
-          </Link>
-          <Link to="/api">
-            <Button 
-              variant="outline" 
-              className="bg-blue-900 text-white hover:bg-blue-800 border-blue-700"
-            >
-              API
-            </Button>
-          </Link>
-        </div>
-
+        <NavButtons />
+        
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
