@@ -75,7 +75,7 @@ const Product = () => {
             price="119.99" 
             period="€"
             variant="default"
-            buttonText="Accès à vie"
+            buttonText="S'abonner"
             features={[
               { text: "Accès API illimité" },
               { text: "Support dédié 24/7" },
