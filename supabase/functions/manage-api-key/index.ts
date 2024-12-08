@@ -97,6 +97,7 @@ serve(async (req) => {
 
     // Handle GET request - fetch existing API key
     if (req.method === 'GET') {
+      console.log("Fetching API key for user:", user.id)
       const { data: existingKey, error: keyError } = await supabaseClient
         .from('api_keys')
         .select('key_value')
@@ -105,18 +106,21 @@ serve(async (req) => {
         .maybeSingle();
 
       if (keyError) {
+        console.error("Error fetching API key:", keyError)
         throw keyError;
       }
 
-      // Si une clé existe déjà, la retourner
+      // If a key exists, return it
       if (existingKey) {
+        console.log("Existing API key found")
         return new Response(
           JSON.stringify({ api_key: existingKey.key_value }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
-      // Si aucune clé n'existe, en générer une nouvelle
+      // If no key exists, generate a new one
+      console.log("No existing API key found, generating new one")
       const newApiKey = `sk_${crypto.randomUUID()}`;
       const { error: insertError } = await supabaseClient
         .from('api_keys')
@@ -127,9 +131,11 @@ serve(async (req) => {
         });
 
       if (insertError) {
+        console.error("Error inserting new API key:", insertError)
         throw insertError;
       }
 
+      console.log("New API key generated and stored")
       return new Response(
         JSON.stringify({ api_key: newApiKey }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -138,14 +144,15 @@ serve(async (req) => {
 
     // Handle POST request - regenerate API key
     if (req.method === 'POST') {
-      // Désactiver l'ancienne clé
+      console.log("Regenerating API key for user:", user.id)
+      // Deactivate old key
       await supabaseClient
         .from('api_keys')
         .update({ is_active: false })
         .eq('user_id', user.id)
         .eq('is_active', true);
 
-      // Générer et insérer une nouvelle clé
+      // Generate and insert new key
       const newApiKey = `sk_${crypto.randomUUID()}`;
       const { error: insertError } = await supabaseClient
         .from('api_keys')
@@ -156,9 +163,11 @@ serve(async (req) => {
         });
 
       if (insertError) {
+        console.error("Error inserting regenerated API key:", insertError)
         throw insertError;
       }
 
+      console.log("API key regenerated successfully")
       return new Response(
         JSON.stringify({ api_key: newApiKey }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
