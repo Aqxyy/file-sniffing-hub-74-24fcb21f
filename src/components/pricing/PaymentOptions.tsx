@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft } from "lucide-react";
 
 interface PaymentOptionsProps {
   priceNumber: number;
@@ -47,45 +46,51 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
   };
 
   return (
-    <div className="w-full space-y-4 relative">
+    <div className="w-full space-y-4">
       <PayPalScriptProvider options={{ 
         clientId: "AQSK9-m4vRwgDgQwhSipOw56fmMZJPSTWdBeUllYIFIqVSVLUDec_aGnaqnOC-6bKpYRaS68DPaZGnts",
         currency: "EUR",
         intent: "CAPTURE"
       }}>
-        <div className="bg-white p-6 rounded-lg">
-          <PayPalButtons
-            style={{ 
-              layout: "vertical",
-              shape: "rect",
-              label: "pay"
-            }}
-            disabled={isProcessing}
-            createOrder={(data, actions) => {
-              console.log("Creating PayPal order...");
-              return actions.order.create({
-                intent: "CAPTURE",
-                purchase_units: [
-                  {
-                    amount: {
-                      value: priceNumber.toString(),
-                      currency_code: "EUR"
-                    },
-                    description: `Abonnement ${planName}`
-                  }
-                ]
-              });
-            }}
-            onApprove={handlePaypalApprove}
-            onError={(err) => {
-              console.error("PayPal Error:", err);
-              toast.error("Une erreur est survenue avec PayPal");
-            }}
-            onCancel={() => {
-              onCancel();
-            }}
-          />
-        </div>
+        <PayPalButtons
+          style={{ 
+            layout: "vertical",
+            shape: "rect",
+            label: "subscribe"
+          }}
+          disabled={isProcessing}
+          createOrder={(data, actions) => {
+            console.log("Creating PayPal order...");
+            return actions.order.create({
+              intent: "CAPTURE",
+              purchase_units: [
+                {
+                  amount: {
+                    value: priceNumber.toString(),
+                    currency_code: "EUR"
+                  },
+                  description: `Abonnement ${planName}`
+                }
+              ]
+            });
+          }}
+          onApprove={handlePaypalApprove}
+          onError={(err) => {
+            console.error("PayPal Error:", err);
+            toast.error("Une erreur est survenue avec PayPal");
+          }}
+          onCancel={() => {
+            onCancel();
+          }}
+        />
+        <Button 
+          variant="outline"
+          className="w-full"
+          onClick={onCancel}
+          disabled={isProcessing}
+        >
+          Retour
+        </Button>
       </PayPalScriptProvider>
     </div>
   );

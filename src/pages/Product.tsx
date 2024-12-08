@@ -1,6 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
+import NavButtons from "@/components/NavButtons";
 import PricingPlan from "@/components/pricing/PricingPlan";
+import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -20,7 +21,7 @@ const Product = () => {
         .from('subscriptions')
         .select('plan_type, status, api_access')
         .eq('user_id', user.id)
-        .maybeSingle();
+        .maybeSingle(); // Use maybeSingle instead of single
         
       if (error) {
         console.error('Error fetching subscription:', error);
@@ -34,16 +35,17 @@ const Product = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
-      <Button 
-        variant="ghost" 
-        className="fixed top-4 left-4 text-white z-50"
-        onClick={() => navigate(-1)}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Retour
-      </Button>
-
+      <NavButtons />
       <div className="container mx-auto px-4 py-16">
+        <Button 
+          variant="ghost" 
+          className="text-white mb-4"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Retour à la recherche
+        </Button>
+        
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-white mb-4">Choisissez votre plan</h1>
           <p className="text-gray-300 text-lg">
@@ -77,6 +79,7 @@ const Product = () => {
               { text: "Support prioritaire" },
               { text: "Accès aux bases premium" }
             ]}
+            priceId="price_1QTZHvEeS2EtyeTMNWeSozYu"
             currentPlan={subscription?.plan_type === 'standard' && subscription.status === 'active'}
           />
           <PricingPlan 
@@ -92,6 +95,7 @@ const Product = () => {
               { text: "Exports illimités" },
               { text: "Personnalisation avancée" }
             ]}
+            priceId="price_1QTZHIEeS2EtyeTMIobx6y3O"
             currentPlan={subscription?.plan_type === 'pro' && subscription.status === 'active'}
           />
           <PricingPlan 
@@ -107,6 +111,7 @@ const Product = () => {
               { text: "Mises à jour gratuites" },
               { text: "Personnalisation avancée" }
             ]}
+            priceId="price_1QTZwZEeS2EtyeTMcYOFcClK"
             currentPlan={subscription?.plan_type === 'lifetime' && subscription.status === 'active' && subscription.api_access}
           />
         </div>
