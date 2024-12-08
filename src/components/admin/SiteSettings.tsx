@@ -30,9 +30,10 @@ export const SiteSettings = () => {
   const toggleApiStatus = async () => {
     try {
       const newStatus = !apiEnabled;
+      // Remove the explicit ID from the upsert
       const { error } = await supabase
         .from('site_settings')
-        .upsert({ id: 1, api_enabled: newStatus });
+        .upsert({ api_enabled: newStatus });
 
       if (error) throw error;
       

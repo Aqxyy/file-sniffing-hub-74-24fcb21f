@@ -20,6 +20,7 @@ interface PricingPlanProps {
   variant?: "default" | "popular" | "lifetime";
   className?: string;
   priceId?: string;
+  currentPlan?: boolean;
 }
 
 const PricingPlan = ({
@@ -35,6 +36,7 @@ const PricingPlan = ({
   variant = "default",
   className = "",
   priceId = "",
+  currentPlan = false,
 }: PricingPlanProps) => {
   const { toast: toastNotification } = useToast();
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
@@ -104,6 +106,11 @@ const PricingPlan = ({
           Plus populaire
         </div>
       )}
+      {currentPlan && (
+        <div className="absolute -top-3 left-8 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+          Plan actuel
+        </div>
+      )}
       <h3 className="text-2xl font-semibold text-white mb-4">{name}</h3>
       <p className="text-4xl font-bold text-white mb-6">
         {price}{period}
@@ -116,7 +123,7 @@ const PricingPlan = ({
           </li>
         ))}
       </ul>
-      {buttonText && name !== "Gratuit" && (
+      {buttonText && name !== "Gratuit" && !currentPlan && (
         <>
           {!showPaymentOptions ? (
             <Button 
@@ -170,6 +177,11 @@ const PricingPlan = ({
             </PayPalScriptProvider>
           )}
         </>
+      )}
+      {currentPlan && (
+        <div className="text-center text-green-500 font-medium">
+          Plan actif
+        </div>
       )}
     </div>
   );
