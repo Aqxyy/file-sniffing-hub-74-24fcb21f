@@ -54,14 +54,14 @@ const Product = () => {
               { text: "Support prioritaire" },
               { text: "Accès aux bases premium" }
             ]}
-            priceId="price_1QTaXfEeS2EtyeTMzMA5ts9U"
+            priceId="price_1QTZHvEeS2EtyeTMNWeSozYu"
           />
           <PricingPlan 
             name="Pro" 
             price="49.99" 
             period="€/mois"
             variant="default"
-            buttonText="Contacter les ventes"
+            buttonText="S'abonner"
             features={[
               { text: "Tout le plan Standard" },
               { text: "API Access" },
@@ -69,7 +69,7 @@ const Product = () => {
               { text: "Exports illimités" },
               { text: "Personnalisation avancée" }
             ]}
-            priceId="price_1QTaXPEeS2EtyeTMAfT6QyVE"
+            priceId="price_1QTZHIEeS2EtyeTMIobx6y3O"
           />
           <PricingPlan 
             name="API Lifetime" 
@@ -84,7 +84,7 @@ const Product = () => {
               { text: "Mises à jour gratuites" },
               { text: "Personnalisation avancée" }
             ]}
-            priceId="price_1QTaXPEeS2EtyeTMAfT6QyVE"
+            priceId="price_1QTZwZEeS2EtyeTMcYOFcClK"
           />
         </div>
 

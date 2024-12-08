@@ -1,14 +1,6 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import Stripe from 'https://esm.sh/stripe@14.21.0'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.1'
-
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-  apiVersion: '2023-10-16',
-})
-
-const supabaseUrl = Deno.env.get('SUPABASE_URL')
-const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-
-const supabase = createClient(supabaseUrl!, supabaseKey!)
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,6 +19,10 @@ serve(async (req) => {
     }
 
     const body = await req.text()
+    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+      apiVersion: '2023-10-16',
+    })
+    
     const event = stripe.webhooks.constructEvent(
       body,
       signature,
@@ -35,19 +31,36 @@ serve(async (req) => {
 
     console.log('Processing Stripe webhook event:', event.type)
 
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
     switch (event.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object
+        const session = event.data.object as Stripe.Checkout.Session
         console.log('Checkout session completed:', session.id)
+
+        // Get the price ID from the session
+        const lineItems = await stripe.checkout.sessions.listLineItems(session.id)
+        const priceId = lineItems.data[0]?.price?.id
+
+        // Determine plan type based on price ID
+        let planType = 'standard'
+        if (priceId === 'price_1QTZHIEeS2EtyeTMIobx6y3O') {
+          planType = 'pro'
+        } else if (priceId === 'price_1QTZwZEeS2EtyeTMcYOFcClK') {
+          planType = 'lifetime'
+        }
 
         // Handle both subscription and one-time payments
         let subscriptionData
         if (session.mode === 'subscription') {
-          const subscription = await stripe.subscriptions.retrieve(session.subscription)
+          const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
           subscriptionData = {
             user_id: session.client_reference_id,
             stripe_subscription_id: subscription.id,
-            plan_type: subscription.items.data[0].price.id === 'price_1QTaXfEeS2EtyeTMzMA5ts9U' ? 'pro' : 'standard',
+            plan_type: planType,
             status: subscription.status,
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
           }
@@ -63,6 +76,7 @@ serve(async (req) => {
         }
 
         if (subscriptionData) {
+          console.log('Updating subscription data:', subscriptionData)
           const { error } = await supabase
             .from('subscriptions')
             .upsert(subscriptionData)
@@ -77,7 +91,7 @@ serve(async (req) => {
 
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object
+        const subscription = event.data.object as Stripe.Subscription
         console.log('Subscription updated:', subscription.id)
 
         const { error } = await supabase
@@ -101,9 +115,12 @@ serve(async (req) => {
     })
   } catch (error) {
     console.error('Error processing webhook:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      }
+    )
   }
 })
