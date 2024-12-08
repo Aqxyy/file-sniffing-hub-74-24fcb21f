@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import Stripe from 'https://esm.sh/stripe@14.21.0'
 
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-  apiVersion: '2023-10-16',
-})
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -21,8 +17,13 @@ serve(async (req) => {
     console.log('Creating checkout session for price:', priceId, 'and user:', userId)
 
     // Get the price to determine if it's a one-time payment or subscription
+    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+      apiVersion: '2023-10-16',
+    })
+
+    // Get the price details first
     const price = await stripe.prices.retrieve(priceId);
-    const isSubscription = price.type === 'recurring';
+    console.log('Retrieved price details:', price);
 
     const session = await stripe.checkout.sessions.create({
       line_items: [
@@ -31,8 +32,8 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: isSubscription ? 'subscription' : 'payment',
-      success_url: `${req.headers.get('origin')}/success`,
+      mode: price.type === 'recurring' ? 'subscription' : 'payment',
+      success_url: `${req.headers.get('origin')}/`,
       cancel_url: `${req.headers.get('origin')}/product`,
       client_reference_id: userId,
       payment_method_types: ['card'],
