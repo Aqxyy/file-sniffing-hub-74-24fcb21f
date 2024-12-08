@@ -58,10 +58,7 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
           currency: "EUR",
           intent: "capture",
           "disable-funding": "card,credit",
-          "enable-funding": "paypal",
-          "data-client-token": "abc123xyz==",
-          components: "buttons",
-          vault: false
+          "enable-funding": "paypal"
         }}
       >
         <div className="min-h-[150px]">
