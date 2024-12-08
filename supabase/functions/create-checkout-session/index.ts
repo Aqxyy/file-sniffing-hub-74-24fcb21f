@@ -35,6 +35,7 @@ serve(async (req) => {
       success_url: `${req.headers.get('origin')}/success`,
       cancel_url: `${req.headers.get('origin')}/product`,
       client_reference_id: userId,
+      payment_method_types: ['card'],
     })
 
     console.log('Checkout session created:', session.id)
@@ -50,10 +51,10 @@ serve(async (req) => {
     console.error('Error creating checkout session:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
-      {
+      { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
-      },
+      }
     )
   }
 })
