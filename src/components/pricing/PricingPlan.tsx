@@ -116,7 +116,7 @@ const PricingPlan = ({
       </ul>
       {buttonText && name !== "Gratuit" && (
         <PayPalScriptProvider options={{ 
-          clientId: "VOTRE_CLIENT_ID_PAYPAL",
+          clientId: "AQSK9-m4vRwgDgQwhSipOw56fmMZJPSTWdBeUllYIFIqVSVLUDec_aGnaqnOC-6bKpYRaS68DPaZGnts",
           currency: "EUR" 
         }}>
           <div className={`w-full ${getButtonClass()} rounded-md text-white font-medium`}>
@@ -124,7 +124,7 @@ const PricingPlan = ({
               style={{ 
                 layout: "vertical",
                 color: "blue",
-                label: "s'abonner"
+                label: "pay"
               }}
               createOrder={(data, actions) => {
                 return actions.order.create({
