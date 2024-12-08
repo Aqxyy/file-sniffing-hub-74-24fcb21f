@@ -15,25 +15,6 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
   const [isPaypalReady, setIsPaypalReady] = useState(false);
   const [paypalError, setPaypalError] = useState(false);
 
-  useEffect(() => {
-    // Initialize PayPal state
-    setIsPaypalReady(true);
-    setPaypalError(false);
-
-    return () => {
-      setIsPaypalReady(false);
-    };
-  }, []);
-
-  const resetPayPal = () => {
-    setIsPaypalReady(false);
-    setPaypalError(true);
-    setTimeout(() => {
-      setPaypalError(false);
-      setIsPaypalReady(true);
-    }, 2000);
-  };
-
   const handlePaypalApprove = async (data: any, actions: any) => {
     try {
       const order = await actions.order.capture();
@@ -65,7 +46,8 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
     } catch (error) {
       console.error("Erreur PayPal:", error);
       toast.error("Une erreur est survenue lors du paiement");
-      resetPayPal();
+      setPaypalError(true);
+      setTimeout(() => setPaypalError(false), 2000);
     }
   };
 
@@ -78,17 +60,15 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
           intent: "capture",
           components: "buttons",
           'enable-funding': 'paylater,venmo',
-          'disable-funding': 'card',
-          'data-namespace': 'PayPalSDK'
+          'disable-funding': 'card'
         }}
       >
         <div className="min-h-[150px]">
-          {!isPaypalReady && (
-            <div className="text-center text-sm text-gray-500">
-              Chargement du module de paiement...
+          {paypalError ? (
+            <div className="text-center text-sm text-red-500">
+              Une erreur est survenue avec PayPal. Réessayez dans quelques instants...
             </div>
-          )}
-          {isPaypalReady && !paypalError && (
+          ) : (
             <PayPalButtons
               style={{ 
                 layout: "vertical",
@@ -116,7 +96,8 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
               onError={(err) => {
                 console.error("PayPal Error:", err);
                 toast.error("Une erreur est survenue avec PayPal");
-                resetPayPal();
+                setPaypalError(true);
+                setTimeout(() => setPaypalError(false), 2000);
               }}
               onCancel={() => {
                 console.log("Payment cancelled");
@@ -124,11 +105,6 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
                 onCancel();
               }}
             />
-          )}
-          {paypalError && (
-            <div className="text-center text-sm text-gray-500">
-              Rechargement du module de paiement...
-            </div>
           )}
         </div>
         <Button 
