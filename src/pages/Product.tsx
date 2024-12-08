@@ -19,7 +19,7 @@ const Product = () => {
     },
     {
       name: "Standard",
-      price: "19.99€",
+      price: "19€",
       period: "/mois",
       features: [
         "Recherches illimitées",
@@ -27,12 +27,12 @@ const Product = () => {
         "Support prioritaire",
         "Accès aux bases premium",
       ],
-      buttonText: "Essai gratuit de 7 jours",
+      buttonText: "S'abonner maintenant",
       popular: true,
     },
     {
       name: "Pro",
-      price: "49.99€",
+      price: "49€",
       period: "/mois",
       features: [
         "Tout le plan Standard",
@@ -41,7 +41,7 @@ const Product = () => {
         "Exports illimités",
         "Personnalisation avancée"
       ],
-      buttonText: "Contacter les ventes",
+      buttonText: "Souscrire au plan Pro",
       popular: false,
     }
   ];
