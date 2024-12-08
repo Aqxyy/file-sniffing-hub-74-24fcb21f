@@ -58,7 +58,7 @@ const Support = () => {
             <Button 
               variant="outline"
               className="bg-blue-900 text-white hover:bg-blue-800"
-              onClick={() => window.open("DISCORD_LINK_HERE", "_blank")}
+              onClick={() => window.open("https://discord.gg/UfnBUHXbDV", "_blank")}
             >
               <ExternalLink className="w-4 h-4 mr-2" />
               Rejoindre Discord

@@ -5,24 +5,26 @@ import ApiSettings from "./ApiSettings";
 
 export const SiteSettings = () => {
   const [apiEnabled, setApiEnabled] = useState(true);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
 
-  const fetchApiStatus = async () => {
+  const fetchSettings = async () => {
     try {
-      console.log("Fetching API status...");
+      console.log("Fetching site settings...");
       const { data, error } = await supabase
         .from('site_settings')
-        .select('api_enabled')
-        .single();
+        .select('api_enabled, maintenance_mode')
+        .maybeSingle();
 
       if (error) {
-        console.error("API status fetch error:", error);
+        console.error("Settings fetch error:", error);
         throw error;
       }
       
-      console.log("API status data:", data);
+      console.log("Site settings data:", data);
       setApiEnabled(data?.api_enabled ?? true);
+      setMaintenanceMode(data?.maintenance_mode ?? false);
     } catch (error) {
-      console.error("Erreur lors de la récupération du statut API:", error);
+      console.error("Erreur lors de la récupération des paramètres:", error);
       toast.error("Erreur lors de la récupération des paramètres");
     }
   };
@@ -30,10 +32,12 @@ export const SiteSettings = () => {
   const toggleApiStatus = async () => {
     try {
       const newStatus = !apiEnabled;
-      // Remove the explicit ID from the upsert
       const { error } = await supabase
         .from('site_settings')
-        .upsert({ api_enabled: newStatus });
+        .upsert({ 
+          api_enabled: newStatus,
+          maintenance_mode: maintenanceMode 
+        });
 
       if (error) throw error;
       
@@ -45,14 +49,54 @@ export const SiteSettings = () => {
     }
   };
 
+  const toggleMaintenanceMode = async () => {
+    try {
+      const newStatus = !maintenanceMode;
+      const { error } = await supabase
+        .from('site_settings')
+        .upsert({ 
+          maintenance_mode: newStatus,
+          api_enabled: apiEnabled 
+        });
+
+      if (error) throw error;
+      
+      setMaintenanceMode(newStatus);
+      toast.success(`Mode maintenance ${newStatus ? 'activé' : 'désactivé'} avec succès`);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du mode maintenance:", error);
+      toast.error("Erreur lors de la mise à jour des paramètres");
+    }
+  };
+
   useEffect(() => {
-    fetchApiStatus();
+    fetchSettings();
   }, []);
 
   return (
-    <ApiSettings 
-      apiEnabled={apiEnabled}
-      onToggleApi={toggleApiStatus}
-    />
+    <div className="space-y-6">
+      <ApiSettings 
+        apiEnabled={apiEnabled}
+        onToggleApi={toggleApiStatus}
+      />
+      <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+        <div>
+          <h3 className="text-lg font-medium text-white">Mode Maintenance</h3>
+          <p className="text-sm text-gray-400">
+            Active/désactive le mode maintenance du site
+          </p>
+        </div>
+        <button
+          onClick={toggleMaintenanceMode}
+          className={`px-4 py-2 rounded-md transition-colors ${
+            maintenanceMode 
+              ? 'bg-red-600 hover:bg-red-700 text-white' 
+              : 'bg-green-600 hover:bg-green-700 text-white'
+          }`}
+        >
+          {maintenanceMode ? 'Désactiver' : 'Activer'}
+        </button>
+      </div>
+    </div>
   );
 };

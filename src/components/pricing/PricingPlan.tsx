@@ -40,9 +40,11 @@ const PricingPlan = ({
 }: PricingPlanProps) => {
   const { toast: toastNotification } = useToast();
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handlePaypalApprove = async (data: any, actions: any) => {
     try {
+      setIsProcessing(true);
       const order = await actions.order.capture();
       console.log("PayPal order completed:", order);
       
@@ -72,6 +74,9 @@ const PricingPlan = ({
     } catch (error) {
       console.error("Erreur PayPal:", error);
       toast.error("Une erreur est survenue lors du paiement");
+    } finally {
+      setIsProcessing(false);
+      setShowPaymentOptions(false);
     }
   };
 
@@ -129,6 +134,7 @@ const PricingPlan = ({
             <Button 
               className={`w-full ${getButtonClass()} text-white`}
               onClick={() => setShowPaymentOptions(true)}
+              disabled={isProcessing}
             >
               {buttonText}
             </Button>
@@ -145,6 +151,7 @@ const PricingPlan = ({
                     shape: "rect",
                     label: "subscribe"
                   }}
+                  disabled={isProcessing}
                   createOrder={(data, actions) => {
                     console.log("Creating PayPal order...");
                     return actions.order.create({
@@ -164,12 +171,18 @@ const PricingPlan = ({
                   onError={(err) => {
                     console.error("PayPal Error:", err);
                     toast.error("Une erreur est survenue avec PayPal");
+                    setIsProcessing(false);
+                  }}
+                  onCancel={() => {
+                    setShowPaymentOptions(false);
+                    setIsProcessing(false);
                   }}
                 />
                 <Button 
                   variant="outline"
                   className="w-full"
                   onClick={() => setShowPaymentOptions(false)}
+                  disabled={isProcessing}
                 >
                   Retour
                 </Button>
