@@ -19,7 +19,6 @@ const Api = () => {
   const { data: apiStatus } = useQuery({
     queryKey: ["api-status"],
     queryFn: async () => {
-      console.log("Fetching API status...");
       const { data, error } = await supabase
         .from('site_settings')
         .select('api_enabled')
@@ -31,7 +30,6 @@ const Api = () => {
         console.error("Error fetching API status:", error);
         throw error;
       }
-      console.log("API status data:", data);
       return data;
     },
   });
@@ -41,7 +39,6 @@ const Api = () => {
     queryKey: ["subscription", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
-      console.log("Fetching subscription for user:", user.id);
       
       const { data, error } = await supabase
         .from('subscriptions')
@@ -55,7 +52,6 @@ const Api = () => {
         return null;
       }
       
-      console.log("Subscription data:", data);
       return data;
     },
     enabled: !!user?.id,
@@ -65,7 +61,6 @@ const Api = () => {
   const { data: apiKey, isLoading: isLoadingApiKey, refetch: refetchApiKey } = useQuery({
     queryKey: ["api-key", user?.id],
     queryFn: async () => {
-      console.log("Fetching API key...");
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
         throw new Error("No access token found");
@@ -80,7 +75,6 @@ const Api = () => {
         throw new Error(response.error.message || "Failed to fetch API key");
       }
       
-      console.log("API key response:", response.data);
       return response.data;
     },
     enabled: !!user?.id && (
@@ -90,7 +84,6 @@ const Api = () => {
       subscription?.api_access === true && 
       apiStatus?.api_enabled === true
     ),
-    retry: false,
     staleTime: Infinity, // Ne pas refetch automatiquement
   });
 
@@ -122,12 +115,6 @@ const Api = () => {
     ['pro', 'lifetime'].includes(subscription.plan_type) && 
     subscription.status === 'active' && 
     subscription.api_access;
-
-  console.log("Current user:", user?.email);
-  console.log("Is admin:", isAdmin);
-  console.log("Has valid subscription:", hasValidSubscription);
-  console.log("API status:", apiStatus);
-  console.log("Subscription data:", subscription);
 
   if (!apiStatus?.api_enabled && !isAdmin) {
     return (
