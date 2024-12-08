@@ -48,8 +48,11 @@ const Api = () => {
         throw new Error("Failed to fetch subscription status");
       }
       
-      return response.json();
+      const data = await response.json();
+      console.log("Subscription data:", data);
+      return data;
     },
+    retry: 1,
   });
 
   const { data: apiKey, isLoading, error: apiKeyError } = useQuery({
@@ -60,27 +63,40 @@ const Api = () => {
         throw new Error("No access token found");
       }
       
-      const response = await fetch("https://dihvcgtshzhuwnfxhfnu.supabase.co/functions/v1/manage-api-key", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("API key fetch error:", errorData);
-        throw new Error(errorData.error || "Failed to fetch API key");
+      try {
+        const response = await fetch("https://dihvcgtshzhuwnfxhfnu.supabase.co/functions/v1/manage-api-key", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("API key fetch error:", errorData);
+          throw new Error(errorData.error || "Failed to fetch API key");
+        }
+        
+        const data = await response.json();
+        console.log("API key data:", data);
+        return data;
+      } catch (error) {
+        console.error("API key fetch error:", error);
+        throw error;
       }
-      
-      return response.json();
     },
-    enabled: subscription?.subscribed && ["pro", "lifetime"].includes(subscription?.subscription?.plan_type) && apiStatus?.api_enabled,
+    enabled: !!subscription?.subscribed && ["pro", "lifetime"].includes(subscription?.subscription?.plan_type) && apiStatus?.api_enabled,
+    retry: false,
   });
 
   const isAdmin = user?.email === "williamguerif@gmail.com";
   const hasValidSubscription = subscription?.subscribed && ["pro", "lifetime"].includes(subscription?.subscription?.plan_type);
+
+  console.log("Current user:", user?.email);
+  console.log("Is admin:", isAdmin);
+  console.log("Has valid subscription:", hasValidSubscription);
+  console.log("API status:", apiStatus);
 
   if (!apiStatus?.api_enabled && !isAdmin) {
     return (
