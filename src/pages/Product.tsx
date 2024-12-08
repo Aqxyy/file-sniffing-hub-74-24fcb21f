@@ -14,7 +14,6 @@ const Product = () => {
         "Résultats limités",
         "Support basique",
       ],
-      buttonText: "Commencer",
       popular: false,
     },
     {
@@ -29,6 +28,7 @@ const Product = () => {
       ],
       buttonText: "S'abonner maintenant",
       popular: true,
+      priceId: "VOTRE_PRICE_ID_STANDARD"
     },
     {
       name: "Pro",
@@ -43,14 +43,27 @@ const Product = () => {
       ],
       buttonText: "Souscrire au plan Pro",
       popular: false,
+      priceId: "VOTRE_PRICE_ID_PRO"
     }
   ];
 
-  const handlePlanClick = (plan: string) => {
-    if (plan === "Gratuit") {
-      toast.info("Redirection vers l'inscription...");
-    } else {
-      toast.info("Cette fonctionnalité sera bientôt disponible");
+  const handlePlanClick = async (plan: string, priceId?: string) => {
+    if (!priceId) return;
+    
+    try {
+      const response = await supabase.functions.invoke('create-checkout-session', {
+        body: { priceId }
+      });
+
+      if (response.error) throw response.error;
+
+      const { url } = response.data;
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error("Une erreur est survenue lors de la redirection vers le paiement");
     }
   };
 
@@ -117,16 +130,18 @@ const Product = () => {
                 ))}
               </ul>
               
-              <Button 
-                onClick={() => handlePlanClick(plan.name)}
-                className={`w-full ${
-                  plan.popular 
-                    ? "bg-blue-500 hover:bg-blue-600" 
-                    : "bg-gray-700 hover:bg-gray-600"
-                } text-white`}
-              >
-                {plan.buttonText}
-              </Button>
+              {plan.buttonText && (
+                <Button 
+                  onClick={() => handlePlanClick(plan.name, plan.priceId)}
+                  className={`w-full ${
+                    plan.popular 
+                      ? "bg-blue-500 hover:bg-blue-600" 
+                      : "bg-gray-700 hover:bg-gray-600"
+                  } text-white`}
+                >
+                  {plan.buttonText}
+                </Button>
+              )}
             </motion.div>
           ))}
         </div>
