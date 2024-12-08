@@ -69,7 +69,7 @@ const Admin = () => {
         .from('subscriptions')
         .select(`
           *,
-          user:profiles!subscriptions_user_id_fkey(email)
+          profiles(email)
         `);
 
       if (subError) {
@@ -81,7 +81,7 @@ const Admin = () => {
 
       const formattedUsers = subscriptions?.map(sub => ({
         id: sub.user_id,
-        email: sub.user?.email || 'Email non disponible',
+        email: sub.profiles?.email || 'Email non disponible',
         plan_type: sub.plan_type,
         status: sub.status,
         api_access: sub.api_access || false

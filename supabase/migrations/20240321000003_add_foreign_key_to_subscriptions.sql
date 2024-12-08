@@ -9,3 +9,7 @@ ALTER TABLE public.subscriptions
 CREATE OR REPLACE VIEW public.profiles AS
     SELECT id, email, email_confirmed_at
     FROM auth.users;
+
+-- Grant necessary permissions
+GRANT SELECT ON public.profiles TO authenticated;
+GRANT SELECT ON public.profiles TO anon;
