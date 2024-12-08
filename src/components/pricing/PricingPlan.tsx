@@ -117,44 +117,51 @@ const PricingPlan = ({
       {buttonText && name !== "Gratuit" && (
         <PayPalScriptProvider options={{ 
           clientId: "AQSK9-m4vRwgDgQwhSipOw56fmMZJPSTWdBeUllYIFIqVSVLUDec_aGnaqnOC-6bKpYRaS68DPaZGnts",
-          currency: "EUR" 
+          currency: "EUR",
+          intent: "capture"
         }}>
           <div className="w-full">
+            <PayPalButtons
+              style={{ 
+                layout: "vertical",
+                shape: "rect",
+                label: "subscribe"
+              }}
+              createOrder={(data, actions) => {
+                console.log("Creating PayPal order...");
+                return actions.order.create({
+                  purchase_units: [
+                    {
+                      amount: {
+                        value: priceNumber.toString(),
+                        currency_code: "EUR"
+                      },
+                      description: `Abonnement ${name}`
+                    }
+                  ]
+                });
+              }}
+              onApprove={handlePaypalApprove}
+              onError={(err) => {
+                console.error("PayPal Error:", err);
+                toast.error("Une erreur est survenue avec PayPal");
+              }}
+            />
             <Button 
-              className={`w-full ${getButtonClass()}`}
+              className={`w-full ${getButtonClass()} text-white`}
               onClick={() => {
+                console.log("Button clicked, finding PayPal button...");
                 const paypalButtons = document.querySelector('[data-paypal-button="true"]');
                 if (paypalButtons) {
+                  console.log("PayPal button found, clicking...");
                   (paypalButtons as HTMLElement).click();
+                } else {
+                  console.log("PayPal button not found");
                 }
               }}
             >
               S'abonner
             </Button>
-            <div className="hidden">
-              <PayPalButtons
-                style={{ layout: "vertical" }}
-                createOrder={(data, actions) => {
-                  return actions.order.create({
-                    intent: "CAPTURE",
-                    purchase_units: [
-                      {
-                        amount: {
-                          value: priceNumber.toString(),
-                          currency_code: "EUR"
-                        },
-                        description: `Abonnement ${name}`
-                      }
-                    ]
-                  });
-                }}
-                onApprove={handlePaypalApprove}
-                onError={(err) => {
-                  console.error("PayPal Error:", err);
-                  toast.error("Une erreur est survenue avec PayPal");
-                }}
-              />
-            </div>
           </div>
         </PayPalScriptProvider>
       )}
