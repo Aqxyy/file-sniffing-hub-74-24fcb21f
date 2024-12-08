@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface PaymentOptionsProps {
   priceNumber: number;
@@ -12,7 +12,6 @@ interface PaymentOptionsProps {
 }
 
 const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: PaymentOptionsProps) => {
-  const [isPaypalReady, setIsPaypalReady] = useState(false);
   const [paypalError, setPaypalError] = useState(false);
 
   const handlePaypalApprove = async (data: any, actions: any) => {
