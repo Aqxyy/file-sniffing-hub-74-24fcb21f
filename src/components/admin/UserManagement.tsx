@@ -18,7 +18,7 @@ interface SubscriptionWithProfile {
   api_access: boolean;
   profiles: {
     email: string;
-  } | null;
+  };
 }
 
 export const UserManagement = () => {
@@ -36,7 +36,7 @@ export const UserManagement = () => {
           plan_type,
           status,
           api_access,
-          profiles!subscriptions_user_id_fkey (
+          profiles (
             email
           )
         `) as { data: SubscriptionWithProfile[] | null, error: any };
@@ -53,7 +53,7 @@ export const UserManagement = () => {
         email: sub.profiles?.email || 'Email non disponible',
         plan_type: sub.plan_type,
         status: sub.status,
-        api_access: sub.api_access || false
+        api_access: sub.api_access
       })) || [];
 
       setUsers(formattedUsers);
