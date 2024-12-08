@@ -12,15 +12,14 @@ interface PaymentOptionsProps {
 }
 
 const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: PaymentOptionsProps) => {
-  const [isPaypalReady, setIsPaypalReady] = useState(true);
+  const [isPaypalReady, setIsPaypalReady] = useState(false);
   const [paypalError, setPaypalError] = useState(false);
 
   useEffect(() => {
-    // Reset PayPal state when component mounts
+    // Initialize PayPal state
     setIsPaypalReady(true);
     setPaypalError(false);
 
-    // Cleanup function to handle unmounting
     return () => {
       setIsPaypalReady(false);
     };
@@ -29,7 +28,6 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
   const resetPayPal = () => {
     setIsPaypalReady(false);
     setPaypalError(true);
-    // Give more time for PayPal to clean up
     setTimeout(() => {
       setPaypalError(false);
       setIsPaypalReady(true);
@@ -78,10 +76,18 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
           clientId: "AZDxjDScFpQtjWTOUtWKbyN_bDt4OgqaF4eYXlewfBP4-8aqX3PiV8e1GWU6liB2CUXlkA59kJXE7M6R",
           currency: "EUR",
           intent: "capture",
-          components: "buttons"
+          components: "buttons",
+          'enable-funding': 'paylater,venmo',
+          'disable-funding': 'card',
+          'data-namespace': 'PayPalSDK'
         }}
       >
         <div className="min-h-[150px]">
+          {!isPaypalReady && (
+            <div className="text-center text-sm text-gray-500">
+              Chargement du module de paiement...
+            </div>
+          )}
           {isPaypalReady && !paypalError && (
             <PayPalButtons
               style={{ 
@@ -90,6 +96,7 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
                 color: "gold"
               }}
               disabled={isProcessing}
+              forceReRender={[priceNumber]}
               createOrder={(data, actions) => {
                 console.log("Creating PayPal order...");
                 return actions.order.create({
