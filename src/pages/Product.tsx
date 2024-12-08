@@ -43,7 +43,7 @@ const Product = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {/* Standard Plan */}
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700">
             <h3 className="text-2xl font-semibold text-white mb-4">Standard</h3>
@@ -132,7 +132,7 @@ const Product = () => {
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                Fonctionnalité pro exclusive
+                Accès API
               </li>
               <li className="flex items-center text-gray-300">
                 <svg
@@ -156,6 +156,70 @@ const Product = () => {
               className="w-full bg-blue-500 hover:bg-blue-600"
             >
               Commencer
+            </Button>
+          </div>
+
+          {/* Lifetime API Access */}
+          <div className="bg-purple-600/10 backdrop-blur-sm rounded-2xl p-8 border border-purple-500/20">
+            <h3 className="text-2xl font-semibold text-white mb-4">API Lifetime</h3>
+            <p className="text-4xl font-bold text-white mb-6">
+              119€ <span className="text-lg font-normal text-gray-400">une fois</span>
+            </p>
+            <ul className="space-y-4 mb-8">
+              <li className="flex items-center text-gray-300">
+                <svg
+                  className="w-5 h-5 text-green-500 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Accès API à vie
+              </li>
+              <li className="flex items-center text-gray-300">
+                <svg
+                  className="w-5 h-5 text-green-500 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Support technique
+              </li>
+              <li className="flex items-center text-gray-300">
+                <svg
+                  className="w-5 h-5 text-green-500 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Mises à jour incluses
+              </li>
+            </ul>
+            <Button
+              onClick={() => handleSubscribe("price_1QTZwZEeS2EtyeTMcYOFcClK")}
+              className="w-full bg-purple-500 hover:bg-purple-600"
+            >
+              Acheter
             </Button>
           </div>
         </div>
