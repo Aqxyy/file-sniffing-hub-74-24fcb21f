@@ -28,8 +28,8 @@ const Product = () => {
             price="9.99" 
             variant="default"
             features={[
-              { text: "10 recherches par jour" },
-              { text: "Résultats limités" },
+              { text: "50 recherches par jour" },
+              { text: "Résultats complets" },
               { text: "Support basique" }
             ]}
             priceId="price_1OvPxlGPnRBnzxYPxRNBPGDR"
