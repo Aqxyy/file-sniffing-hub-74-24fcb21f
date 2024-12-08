@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Product from "./pages/Product";
+import Help from "./pages/Help";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import { useAuth } from "./contexts/AuthContext";
@@ -25,7 +26,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/login" />;
   }
 
-  // Check if email is verified
   if (!user.email_confirmed_at) {
     toast.error("Veuillez vérifier votre email avant d'accéder au site");
     return <Navigate to="/login" />;
@@ -34,7 +34,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Public Route Component (redirects to home if already logged in)
+// Public Route Component
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
@@ -65,6 +65,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Product />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/help"
+        element={
+          <ProtectedRoute>
+            <Help />
           </ProtectedRoute>
         }
       />

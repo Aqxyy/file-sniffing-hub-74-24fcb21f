@@ -1,89 +1,96 @@
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { MessageSquare } from "lucide-react";
 
-const Login = () => {
+export default function Login() {
+  const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setLoading(true);
 
     try {
-      await signIn(email, password);
-      toast.success("Connexion réussie !");
+      const { error } = await signIn(email, password);
+      if (error) throw error;
+      navigate("/");
     } catch (error: any) {
-      console.error("Login error:", error);
-      if (error.message === "Invalid login credentials") {
-        toast.error("Email ou mot de passe incorrect");
-      } else {
-        toast.error("Une erreur est survenue lors de la connexion");
-      }
+      toast.error(error.message);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-gray-800 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">Connexion</CardTitle>
-          <CardDescription className="text-center">
-            Connectez-vous pour accéder à votre compte
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="exemple@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isLoading}
-            >
-              {isLoading ? "Connexion en cours..." : "Se connecter"}
+    <div className="flex min-h-screen flex-col">
+      <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-6 lg:h-[60px]">
+        <div className="flex flex-1 items-center gap-2">
+          <Link className="font-semibold" to="/">
+            File Sniffing Hub
+          </Link>
+        </div>
+        <div className="flex items-center gap-4">
+          <Link to="/product">
+            <Button variant="ghost">Product</Button>
+          </Link>
+          <Link to="/help">
+            <Button variant="ghost">
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Support
             </Button>
-            <p className="text-sm text-center text-muted-foreground">
+          </Link>
+        </div>
+      </header>
+      <main className="flex-1">
+        <div className="container flex items-center justify-center min-h-[calc(100vh-60px)]">
+          <div className="w-full max-w-[350px] space-y-6">
+            <div className="space-y-2 text-center">
+              <h1 className="text-3xl font-bold">Connexion</h1>
+              <p className="text-gray-500 dark:text-gray-400">
+                Entrez vos identifiants pour vous connecter
+              </p>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Input
+                  id="email"
+                  placeholder="Email"
+                  required
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Input
+                  id="password"
+                  placeholder="Mot de passe"
+                  required
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              <Button className="w-full" type="submit" disabled={loading}>
+                {loading ? "Connexion..." : "Se connecter"}
+              </Button>
+            </form>
+            <div className="text-center text-sm">
               Pas encore de compte ?{" "}
-              <Link to="/signup" className="text-primary hover:underline">
-                Créer un compte
+              <Link className="underline" to="/signup">
+                S'inscrire
               </Link>
-            </p>
-          </CardFooter>
-        </form>
-      </Card>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
-};
-
-export default Login;
+}
