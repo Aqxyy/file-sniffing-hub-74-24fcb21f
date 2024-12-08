@@ -109,7 +109,7 @@ const Index = () => {
           </form>
 
           <div className="text-center text-gray-300 text-sm">
-            <p>Exemples de recherche : "error 404", "login failed", "database connection"</p>
+            {/* Exemples de recherche : "error 404", "login failed", "database connection" */}
           </div>
         </motion.div>
 

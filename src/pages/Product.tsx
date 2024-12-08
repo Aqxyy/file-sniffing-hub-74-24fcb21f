@@ -84,7 +84,7 @@ const Product = () => {
               transition={{ delay: index * 0.2 }}
               className="bg-gray-800/30 backdrop-blur-sm p-6 rounded-xl"
             >
-              <feature.icon className="w-10 h-10 text-accent mx-auto mb-4" />
+              <feature.icon className="w-10 h-10 text-blue-500 mx-auto mb-4" />
               <h3 className="text-white font-semibold text-lg mb-2">{feature.title}</h3>
               <p className="text-gray-300 text-sm">{feature.description}</p>
             </motion.div>
@@ -99,11 +99,11 @@ const Product = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 + index * 0.2 }}
               className={`relative bg-gray-800/30 backdrop-blur-sm p-8 rounded-xl border-2 ${
-                plan.popular ? "border-accent" : "border-transparent"
+                plan.popular ? "border-blue-500" : "border-transparent"
               }`}
             >
               {plan.popular && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-white px-3 py-1 rounded-full text-sm">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-500 text-white px-3 py-1 rounded-full text-sm">
                   Populaire
                 </span>
               )}
@@ -118,7 +118,7 @@ const Product = () => {
                 {plan.features.map((feature, featureIndex) => (
                   <li key={featureIndex} className="flex items-center text-gray-300">
                     <svg
-                      className="w-5 h-5 text-accent mr-2"
+                      className="w-5 h-5 text-blue-500 mr-2"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -134,7 +134,7 @@ const Product = () => {
                   </li>
                 ))}
               </ul>
-              <Button className="w-full bg-accent hover:bg-accent/90">
+              <Button className="w-full bg-blue-900 hover:bg-blue-800 text-white">
                 {plan.buttonText}
               </Button>
             </motion.div>
