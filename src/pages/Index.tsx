@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import NavButtons from "@/components/NavButtons";
+import AdminButton from "@/components/AdminButton";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -55,6 +56,7 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
       <div className="container mx-auto px-4 py-16">
         <NavButtons />
+        <AdminButton />
         
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -100,7 +102,6 @@ const Index = () => {
           </form>
 
           <div className="text-center text-gray-300 text-sm">
-            {/* Exemples de recherche : "error 404", "login failed", "database connection" */}
           </div>
         </motion.div>
 

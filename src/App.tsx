@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Support from "./pages/Support";
 import Api from "./pages/Api";
+import Admin from "./pages/Admin";
 import { useAuth } from "./contexts/AuthContext";
 import { toast } from "sonner";
 
@@ -30,6 +31,22 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (!user.email_confirmed_at) {
     toast.error("Veuillez vérifier votre email avant d'accéder au site");
     return <Navigate to="/login" />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Admin Route Component
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  
+  if (!user || user.email !== "williamguerif@gmail.com") {
+    toast.error("Accès non autorisé");
+    return <Navigate to="/" />;
   }
   
   return <>{children}</>;
@@ -83,6 +100,14 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <Api />
           </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <Admin />
+          </AdminRoute>
         }
       />
       <Route
