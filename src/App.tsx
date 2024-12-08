@@ -9,6 +9,7 @@ import Product from "./pages/Product";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import { useAuth } from "./contexts/AuthContext";
+import { toast } from "sonner";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (!user) {
     return <Navigate to="/login" />;
   }
+
+  // Check if email is verified
+  if (!user.email_confirmed_at) {
+    toast.error("Veuillez vérifier votre email avant d'accéder au site");
+    return <Navigate to="/login" />;
+  }
   
   return <>{children}</>;
 };
@@ -35,7 +42,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
     return <div>Loading...</div>;
   }
   
-  if (user) {
+  if (user?.email_confirmed_at) {
     return <Navigate to="/" />;
   }
   
