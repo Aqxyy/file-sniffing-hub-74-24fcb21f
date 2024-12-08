@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { useState } from "react";
 
 interface PaymentOptionsProps {
   priceNumber: number;
@@ -11,6 +12,8 @@ interface PaymentOptionsProps {
 }
 
 const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: PaymentOptionsProps) => {
+  const [isPaypalReady, setIsPaypalReady] = useState(true);
+
   const handlePaypalApprove = async (data: any, actions: any) => {
     try {
       const order = await actions.order.capture();
@@ -42,6 +45,9 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
     } catch (error) {
       console.error("Erreur PayPal:", error);
       toast.error("Une erreur est survenue lors du paiement");
+      setIsPaypalReady(false);
+      // Reset PayPal state
+      setTimeout(() => setIsPaypalReady(true), 1000);
     }
   };
 
@@ -56,38 +62,44 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
         }}
       >
         <div className="min-h-[150px]">
-          <PayPalButtons
-            style={{ 
-              layout: "vertical",
-              shape: "rect",
-              color: "gold"
-            }}
-            disabled={isProcessing}
-            createOrder={(data, actions) => {
-              console.log("Creating PayPal order...");
-              return actions.order.create({
-                intent: "CAPTURE",
-                purchase_units: [
-                  {
-                    amount: {
-                      value: priceNumber.toString(),
-                      currency_code: "EUR"
-                    },
-                    description: `Abonnement ${planName}`
-                  }
-                ]
-              });
-            }}
-            onApprove={handlePaypalApprove}
-            onError={(err) => {
-              console.error("PayPal Error:", err);
-              toast.error("Une erreur est survenue avec PayPal");
-            }}
-            onCancel={() => {
-              console.log("Payment cancelled");
-              onCancel();
-            }}
-          />
+          {isPaypalReady && (
+            <PayPalButtons
+              style={{ 
+                layout: "vertical",
+                shape: "rect",
+                color: "gold"
+              }}
+              disabled={isProcessing}
+              createOrder={(data, actions) => {
+                console.log("Creating PayPal order...");
+                return actions.order.create({
+                  intent: "CAPTURE",
+                  purchase_units: [
+                    {
+                      amount: {
+                        value: priceNumber.toString(),
+                        currency_code: "EUR"
+                      },
+                      description: `Abonnement ${planName}`
+                    }
+                  ]
+                });
+              }}
+              onApprove={handlePaypalApprove}
+              onError={(err) => {
+                console.error("PayPal Error:", err);
+                toast.error("Une erreur est survenue avec PayPal");
+                setIsPaypalReady(false);
+                // Reset PayPal state
+                setTimeout(() => setIsPaypalReady(true), 1000);
+              }}
+              onCancel={() => {
+                console.log("Payment cancelled");
+                toast.info("Paiement annulé");
+                onCancel();
+              }}
+            />
+          )}
         </div>
         <Button 
           variant="outline"
