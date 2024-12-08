@@ -33,7 +33,7 @@ const Product = () => {
               { text: "Résultats complets" },
               { text: "Support basique" }
             ]}
-            priceId="price_1QTZHvEeS2EtyeTMNWeSozYu"
+            priceId="price_1QTaYUEeS2EtyeTMIe09RI8v"
           />
           <PricingPlan 
             name="Plan Pro" 
@@ -46,7 +46,7 @@ const Product = () => {
               { text: "Support prioritaire" },
               { text: "API Access" }
             ]}
-            priceId="price_1QTZHIEeS2EtyeTMIobx6y3O"
+            priceId="price_1QTaXfEeS2EtyeTMzMA5ts9U"
           />
           <PricingPlan 
             name="API Lifetime" 
@@ -59,7 +59,7 @@ const Product = () => {
               { text: "Accès à vie" },
               { text: "Mises à jour gratuites" }
             ]}
-            priceId="price_1QTZwZEeS2EtyeTMcYOFcClK"
+            priceId="price_1QTaXPEeS2EtyeTMAfT6QyVE"
           />
         </div>
       </div>
