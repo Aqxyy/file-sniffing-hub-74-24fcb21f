@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Code2, Lock } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 const Api = () => {
   const { user } = useAuth();
@@ -10,16 +11,27 @@ const Api = () => {
   const { data: subscription } = useQuery({
     queryKey: ["subscription"],
     queryFn: async () => {
-      // Get the session token from localStorage
-      const token = localStorage.getItem('sb-token');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("No access token found");
+      
+      console.log("Calling is-subscribed with token:", session.access_token);
+      
       const response = await fetch("https://dihvcgtshzhuwnfxhfnu.supabase.co/functions/v1/is-subscribed", {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
       });
-      if (!response.ok) throw new Error("Failed to fetch subscription status");
-      return response.json();
+      
+      if (!response.ok) {
+        console.error("Subscription check failed:", response.status, response.statusText);
+        throw new Error("Failed to fetch subscription status");
+      }
+      
+      const data = await response.json();
+      console.log("Subscription data:", data);
+      return data;
     },
+    retry: 1,
   });
 
   if (!subscription?.subscribed) {
