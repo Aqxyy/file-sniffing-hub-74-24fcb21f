@@ -49,12 +49,17 @@ const Admin = () => {
 
   const fetchApiStatus = async () => {
     try {
+      console.log("Fetching API status...");
       const { data, error } = await supabase
         .from('site_settings')
         .select('api_enabled')
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("API status fetch error:", error);
+        throw error;
+      }
+      console.log("API status data:", data);
       setApiEnabled(data?.api_enabled ?? true);
     } catch (error) {
       console.error("Erreur lors de la récupération du statut API:", error);
@@ -85,7 +90,12 @@ const Admin = () => {
       
       const { data: subscriptions, error: subError } = await supabase
         .from('subscriptions')
-        .select('*, user_email:user_id(email)');
+        .select(`
+          *,
+          users:user_id (
+            email
+          )
+        `);
 
       if (subError) {
         console.error("Subscription fetch error:", subError);
@@ -96,7 +106,7 @@ const Admin = () => {
 
       const formattedUsers = subscriptions.map(sub => ({
         id: sub.user_id,
-        email: sub.user_email?.email || 'Email non disponible',
+        email: sub.users?.email || 'Email non disponible',
         plan_type: sub.plan_type,
         status: sub.status,
         api_access: sub.api_access || false
