@@ -39,6 +39,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         navigate('/');
       } else if (event === 'SIGNED_OUT') {
         navigate('/login');
+      } else if (event === 'USER_UPDATED') {
+        // Handle email verification
+        if (session?.user.confirmed_at) {
+          toast.success("Email vérifié avec succès !");
+          navigate('/');
+        }
       }
     });
 
@@ -63,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       }
     });
     
