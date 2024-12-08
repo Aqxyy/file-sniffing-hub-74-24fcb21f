@@ -5,12 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Database, Lock } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { signUp } = useAuth();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,9 +23,10 @@ const Signup = () => {
     
     setIsLoading(true);
     try {
-      toast.info("Cette fonctionnalité sera bientôt disponible");
-      // TODO: Implement Supabase authentication
+      await signUp(email, password);
+      toast.success("Compte créé avec succès ! Veuillez vous connecter.");
     } catch (error) {
+      console.error("Erreur d'inscription:", error);
       toast.error("Erreur lors de l'inscription");
     } finally {
       setIsLoading(false);
