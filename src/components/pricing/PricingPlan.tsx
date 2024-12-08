@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { useState } from "react";
 
 interface PricingFeature {
   text: string;
@@ -36,6 +37,7 @@ const PricingPlan = ({
   priceId = "",
 }: PricingPlanProps) => {
   const { toast: toastNotification } = useToast();
+  const [showPaymentOptions, setShowPaymentOptions] = useState(false);
 
   const handlePaypalApprove = async (data: any, actions: any) => {
     try {
@@ -115,55 +117,59 @@ const PricingPlan = ({
         ))}
       </ul>
       {buttonText && name !== "Gratuit" && (
-        <PayPalScriptProvider options={{ 
-          clientId: "AQSK9-m4vRwgDgQwhSipOw56fmMZJPSTWdBeUllYIFIqVSVLUDec_aGnaqnOC-6bKpYRaS68DPaZGnts",
-          currency: "EUR",
-          intent: "capture"
-        }}>
-          <div className="w-full">
-            <PayPalButtons
-              style={{ 
-                layout: "vertical",
-                shape: "rect",
-                label: "subscribe"
-              }}
-              createOrder={(data, actions) => {
-                console.log("Creating PayPal order...");
-                return actions.order.create({
-                  purchase_units: [
-                    {
-                      amount: {
-                        value: priceNumber.toString(),
-                        currency_code: "EUR"
-                      },
-                      description: `Abonnement ${name}`
-                    }
-                  ]
-                });
-              }}
-              onApprove={handlePaypalApprove}
-              onError={(err) => {
-                console.error("PayPal Error:", err);
-                toast.error("Une erreur est survenue avec PayPal");
-              }}
-            />
+        <>
+          {!showPaymentOptions ? (
             <Button 
               className={`w-full ${getButtonClass()} text-white`}
-              onClick={() => {
-                console.log("Button clicked, finding PayPal button...");
-                const paypalButtons = document.querySelector('[data-paypal-button="true"]');
-                if (paypalButtons) {
-                  console.log("PayPal button found, clicking...");
-                  (paypalButtons as HTMLElement).click();
-                } else {
-                  console.log("PayPal button not found");
-                }
-              }}
+              onClick={() => setShowPaymentOptions(true)}
             >
-              S'abonner
+              {buttonText}
             </Button>
-          </div>
-        </PayPalScriptProvider>
+          ) : (
+            <PayPalScriptProvider options={{ 
+              clientId: "AQSK9-m4vRwgDgQwhSipOw56fmMZJPSTWdBeUllYIFIqVSVLUDec_aGnaqnOC-6bKpYRaS68DPaZGnts",
+              currency: "EUR",
+              intent: "CAPTURE"
+            }}>
+              <div className="w-full space-y-4">
+                <PayPalButtons
+                  style={{ 
+                    layout: "vertical",
+                    shape: "rect",
+                    label: "subscribe"
+                  }}
+                  createOrder={(data, actions) => {
+                    console.log("Creating PayPal order...");
+                    return actions.order.create({
+                      intent: "CAPTURE",
+                      purchase_units: [
+                        {
+                          amount: {
+                            value: priceNumber.toString(),
+                            currency_code: "EUR"
+                          },
+                          description: `Abonnement ${name}`
+                        }
+                      ]
+                    });
+                  }}
+                  onApprove={handlePaypalApprove}
+                  onError={(err) => {
+                    console.error("PayPal Error:", err);
+                    toast.error("Une erreur est survenue avec PayPal");
+                  }}
+                />
+                <Button 
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setShowPaymentOptions(false)}
+                >
+                  Retour
+                </Button>
+              </div>
+            </PayPalScriptProvider>
+          )}
+        </>
       )}
     </div>
   );
