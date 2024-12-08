@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { getSupabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
@@ -30,13 +31,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     // Setup auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("AuthProvider: Auth state changed", session?.user?.email);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("AuthProvider: Auth state changed", event, session?.user?.email);
       setUser(session?.user ?? null);
+      
+      if (event === 'SIGNED_IN') {
+        navigate('/');
+      } else if (event === 'SIGNED_OUT') {
+        navigate('/login');
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const signIn = async (email: string, password: string) => {
     console.log("AuthProvider: Attempting sign in", email);
@@ -47,19 +54,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw error;
     }
     console.log("AuthProvider: Sign in successful", data.user?.email);
-    navigate('/');
   };
 
   const signUp = async (email: string, password: string) => {
     console.log("AuthProvider: Attempting sign up", email);
     const supabase = getSupabase();
-    const { error, data } = await supabase.auth.signUp({ email, password });
+    const { error, data } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: window.location.origin,
+      }
+    });
+    
     if (error) {
       console.error("AuthProvider: Sign up error", error);
       throw error;
     }
-    console.log("AuthProvider: Sign up successful", data.user?.email);
-    navigate('/login');
+    
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+      throw new Error("Cet email est déjà utilisé");
+    }
+    
+    console.log("AuthProvider: Sign up successful", data);
+    
+    if (data.user && !data.user.confirmed_at) {
+      toast.success("Un email de confirmation vous a été envoyé. Veuillez vérifier votre boîte de réception.");
+      navigate('/login');
+    }
   };
 
   const signOut = async () => {
@@ -71,7 +93,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw error;
     }
     console.log("AuthProvider: Sign out successful");
-    navigate('/login');
   };
 
   return (
