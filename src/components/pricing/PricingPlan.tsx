@@ -37,13 +37,11 @@ const PricingPlan = ({
   const { toast: toastNotification } = useToast();
 
   const handleSubscribe = async () => {
+    console.log("Starting subscription process for price ID:", priceId);
+    
     if (!priceId) {
-      // For free plan or contact sales, no Stripe needed
       if (name === "Gratuit") {
-        toast("Succès", {
-          description: "Vous pouvez commencer à utiliser le plan gratuit"
-        });
-        return;
+        return; // No button for free plan
       }
       if (buttonText === "Contacter les ventes") {
         toast("Info", {
@@ -59,9 +57,7 @@ const PricingPlan = ({
       console.log("Checking session:", session);
       
       if (!session?.access_token) {
-        toast("Erreur", {
-          description: "Vous devez être connecté pour souscrire"
-        });
+        toast.error("Vous devez être connecté pour souscrire");
         return;
       }
 
@@ -91,13 +87,14 @@ const PricingPlan = ({
       }
     } catch (error) {
       console.error("Payment error:", error);
-      toast("Erreur", {
-        description: "Une erreur est survenue lors de la redirection vers le paiement"
-      });
+      toast.error("Une erreur est survenue lors de la redirection vers le paiement");
     }
   };
 
   const getBackgroundClass = () => {
+    if (name === "Gratuit") {
+      return "bg-transparent"; // Remove gray frame for free plan
+    }
     switch (variant) {
       case "popular":
         return "bg-gray-800/50 border-blue-500 border-2";
@@ -138,12 +135,14 @@ const PricingPlan = ({
           </li>
         ))}
       </ul>
-      <Button
-        onClick={handleSubscribe}
-        className={`w-full ${getButtonClass()}`}
-      >
-        {buttonText}
-      </Button>
+      {buttonText && name !== "Gratuit" && (
+        <Button
+          onClick={handleSubscribe}
+          className={`w-full ${getButtonClass()}`}
+        >
+          {buttonText}
+        </Button>
+      )}
     </div>
   );
 };
