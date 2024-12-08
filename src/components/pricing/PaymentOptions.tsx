@@ -94,9 +94,11 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
                 });
               }}
               onApprove={handlePaypalApprove}
-              onError={(err: Error) => {
+              onError={(err) => {
                 console.error("PayPal Error:", err);
-                setScriptError(err.message || "Une erreur inconnue est survenue");
+                setScriptError(typeof err === 'object' && err !== null && 'message' in err 
+                  ? String(err.message) 
+                  : "Une erreur inconnue est survenue");
                 toast.error("Une erreur est survenue avec PayPal");
               }}
               onCancel={() => {
