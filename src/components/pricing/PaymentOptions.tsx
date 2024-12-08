@@ -66,6 +66,7 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
             createOrder={(data, actions) => {
               console.log("Creating PayPal order...");
               return actions.order.create({
+                intent: "CAPTURE",
                 purchase_units: [
                   {
                     amount: {
