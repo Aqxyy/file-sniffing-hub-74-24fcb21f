@@ -15,7 +15,19 @@ if (!supabaseUrl || !supabaseAnonKey) {
     url: supabaseUrl ? 'défini' : 'manquant',
     key: supabaseAnonKey ? 'défini' : 'manquant'
   });
-  throw new Error('Variables d\'environnement Supabase manquantes. Veuillez vérifier que :\n1. L\'intégration Supabase est activée dans Lovable\n2. Vous êtes bien connecté à votre projet Supabase\n3. Les variables d\'environnement sont bien injectées');
+  
+  // Rediriger vers la page de connexion si l'utilisateur n'est pas sur la page de login ou signup
+  const currentPath = window.location.pathname;
+  if (currentPath !== '/login' && currentPath !== '/signup') {
+    window.location.href = '/login';
+  }
+  
+  throw new Error(
+    'Variables d\'environnement Supabase manquantes. Veuillez vérifier que :\n' +
+    '1. L\'intégration Supabase est activée dans Lovable\n' +
+    '2. Vous êtes bien connecté à votre projet Supabase\n' +
+    '3. Les variables d\'environnement sont bien injectées'
+  );
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
