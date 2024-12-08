@@ -20,7 +20,7 @@ const Api = () => {
       const { data, error } = await supabase
         .from('site_settings')
         .select('api_enabled')
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       return data;
@@ -68,7 +68,9 @@ const Api = () => {
       });
       
       if (!response.ok) {
-        throw new Error("Failed to fetch API key");
+        const errorData = await response.json();
+        console.error("API key fetch error:", errorData);
+        throw new Error(errorData.error || "Failed to fetch API key");
       }
       
       return response.json();

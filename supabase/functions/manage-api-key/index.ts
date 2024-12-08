@@ -21,7 +21,7 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization')!
     const token = authHeader.replace('Bearer ', '')
     
-    // Get user data
+    // Get user data with detailed logging
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
     console.log("User data:", user?.id)
 
@@ -36,7 +36,7 @@ serve(async (req) => {
       .select('*')
       .eq('user_id', user.id)
       .eq('status', 'active')
-      .maybeSingle() // Use maybeSingle instead of single
+      .maybeSingle()
 
     console.log("Subscription data:", subscription)
     
@@ -65,7 +65,7 @@ serve(async (req) => {
     const { data: siteSettings, error: settingsError } = await supabaseClient
       .from('site_settings')
       .select('api_enabled')
-      .maybeSingle() // Use maybeSingle here too
+      .maybeSingle()
 
     if (settingsError) {
       console.error("Site settings error:", settingsError)
