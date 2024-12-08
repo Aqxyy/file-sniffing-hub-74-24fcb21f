@@ -13,6 +13,8 @@ export const SiteSettings = () => {
       const { data, error } = await supabase
         .from('site_settings')
         .select('api_enabled, maintenance_mode')
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (error) {
@@ -21,8 +23,10 @@ export const SiteSettings = () => {
       }
       
       console.log("Site settings data:", data);
-      setApiEnabled(data?.api_enabled ?? true);
-      setMaintenanceMode(data?.maintenance_mode ?? false);
+      if (data) {
+        setApiEnabled(data.api_enabled);
+        setMaintenanceMode(data.maintenance_mode);
+      }
     } catch (error) {
       console.error("Erreur lors de la récupération des paramètres:", error);
       toast.error("Erreur lors de la récupération des paramètres");
@@ -34,10 +38,12 @@ export const SiteSettings = () => {
       const newStatus = !apiEnabled;
       const { error } = await supabase
         .from('site_settings')
-        .upsert({ 
+        .insert({ 
           api_enabled: newStatus,
           maintenance_mode: maintenanceMode 
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
       
@@ -54,10 +60,12 @@ export const SiteSettings = () => {
       const newStatus = !maintenanceMode;
       const { error } = await supabase
         .from('site_settings')
-        .upsert({ 
+        .insert({ 
           maintenance_mode: newStatus,
           api_enabled: apiEnabled 
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
       

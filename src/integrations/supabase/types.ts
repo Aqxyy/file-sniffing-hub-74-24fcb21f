@@ -14,16 +14,19 @@ export type Database = {
           api_enabled: boolean | null
           created_at: string
           id: number
+          maintenance_mode: boolean | null
         }
         Insert: {
           api_enabled?: boolean | null
           created_at?: string
           id?: never
+          maintenance_mode?: boolean | null
         }
         Update: {
           api_enabled?: boolean | null
           created_at?: string
           id?: never
+          maintenance_mode?: boolean | null
         }
         Relationships: []
       }
