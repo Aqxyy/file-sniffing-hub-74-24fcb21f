@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { CheckIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase";
+import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { toast } from "sonner";
 
 interface PricingFeature {
@@ -36,58 +36,39 @@ const PricingPlan = ({
 }: PricingPlanProps) => {
   const { toast: toastNotification } = useToast();
 
-  const handleSubscribe = async () => {
-    console.log("Starting subscription process for price ID:", priceId);
-    
-    if (!priceId) {
-      if (name === "Gratuit") {
-        return; // No button for free plan
-      }
-      if (buttonText === "Contacter les ventes") {
-        toast("Info", {
-          description: "Notre équipe commerciale vous contactera bientôt"
-        });
-        return;
-      }
-    }
-
+  const handlePaypalApprove = async (data: any, actions: any) => {
     try {
+      const order = await actions.order.capture();
+      console.log("PayPal order completed:", order);
+      
+      // Ici nous pouvons ajouter la logique pour mettre à jour l'abonnement dans Supabase
       const { data: { session } } = await supabase.auth.getSession();
-      
-      console.log("Current session:", session);
-      
-      if (!session?.access_token) {
-        toast.error("Vous devez être connecté pour souscrire");
+      if (!session?.user?.id) {
+        toast.error("Erreur d'authentification");
         return;
       }
 
-      console.log("Creating checkout session with price ID:", priceId);
-      
-      const response = await supabase.functions.invoke('create-checkout-session', {
-        body: {
-          priceId: priceId,
-          userId: session.user.id,
-        }
-      });
+      // Mettre à jour l'abonnement dans la base de données
+      const { error } = await supabase
+        .from('subscriptions')
+        .upsert({
+          user_id: session.user.id,
+          plan_type: name.toLowerCase(),
+          status: 'active',
+          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // +30 jours
+        });
 
-      console.log("Checkout response:", response);
-
-      if (response.error) {
-        console.error("Checkout error:", response.error);
-        throw new Error(response.error.message || "Erreur lors de la création de la session de paiement");
+      if (error) {
+        console.error("Erreur lors de la mise à jour de l'abonnement:", error);
+        toast.error("Erreur lors de la mise à jour de l'abonnement");
+        return;
       }
 
-      const data = response.data;
-      console.log("Checkout session data:", data);
-
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error("URL de paiement manquante dans la réponse");
-      }
+      toast.success("Paiement réussi ! Votre abonnement est maintenant actif.");
+      window.location.href = '/';
     } catch (error) {
-      console.error("Payment error:", error);
-      toast.error("Une erreur est survenue lors de la redirection vers le paiement. Veuillez réessayer.");
+      console.error("Erreur PayPal:", error);
+      toast.error("Une erreur est survenue lors du paiement");
     }
   };
 
@@ -113,6 +94,9 @@ const PricingPlan = ({
     }
   };
 
+  // Convertir le prix en nombre pour PayPal
+  const priceNumber = parseFloat(price.replace(',', '.'));
+
   return (
     <div className={`rounded-2xl p-8 border relative ${getBackgroundClass()} ${className}`}>
       {variant === "popular" && (
@@ -133,12 +117,32 @@ const PricingPlan = ({
         ))}
       </ul>
       {buttonText && name !== "Gratuit" && (
-        <Button
-          onClick={handleSubscribe}
-          className={`w-full ${getButtonClass()}`}
-        >
-          {buttonText}
-        </Button>
+        <PayPalScriptProvider options={{ 
+          "client-id": "AZDxjDScFpQtjWTOUtWKbyN_bDt4OgqaF4eYXlewfBP4-8aqX3PiV8e1GWU6liB2CUXlkA59kJXE7M6R",
+          currency: "EUR" 
+        }}>
+          <PayPalButtons
+            style={{ layout: "horizontal" }}
+            createOrder={(data, actions) => {
+              return actions.order.create({
+                purchase_units: [
+                  {
+                    amount: {
+                      value: priceNumber.toString(),
+                      currency_code: "EUR"
+                    },
+                    description: `Abonnement ${name}`
+                  }
+                ]
+              });
+            }}
+            onApprove={handlePaypalApprove}
+            onError={(err) => {
+              console.error("PayPal Error:", err);
+              toast.error("Une erreur est survenue avec PayPal");
+            }}
+          />
+        </PayPalScriptProvider>
       )}
     </div>
   );
