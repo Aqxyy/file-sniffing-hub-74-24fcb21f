@@ -60,23 +60,6 @@ const Admin = () => {
     }
   };
 
-  const toggleApiStatus = async () => {
-    try {
-      const newStatus = !apiEnabled;
-      const { error } = await supabase
-        .from('site_settings')
-        .upsert({ id: 1, api_enabled: newStatus });
-
-      if (error) throw error;
-      
-      setApiEnabled(newStatus);
-      toast.success(`API ${newStatus ? 'activée' : 'désactivée'} avec succès`);
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour du statut API:", error);
-      toast.error("Erreur lors de la mise à jour des paramètres");
-    }
-  };
-
   const fetchUsers = async () => {
     try {
       console.log("Fetching users...");
@@ -145,6 +128,23 @@ const Admin = () => {
     } catch (error) {
       console.error("Erreur lors de la mise à jour:", error);
       toast.error("Erreur lors de la mise à jour");
+    }
+  };
+
+  const toggleApiStatus = async () => {
+    try {
+      const newStatus = !apiEnabled;
+      const { error } = await supabase
+        .from('site_settings')
+        .upsert({ id: 1, api_enabled: newStatus });
+
+      if (error) throw error;
+      
+      setApiEnabled(newStatus);
+      toast.success(`API ${newStatus ? 'activée' : 'désactivée'} avec succès`);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du statut API:", error);
+      toast.error("Erreur lors de la mise à jour des paramètres");
     }
   };
 
