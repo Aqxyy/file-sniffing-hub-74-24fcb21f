@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import Product from "./pages/Product";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Support from "./pages/Support";
+import Api from "./pages/Api";
 import { useAuth } from "./contexts/AuthContext";
 import { toast } from "sonner";
 
@@ -25,7 +27,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/login" />;
   }
 
-  // Check if email is verified
   if (!user.email_confirmed_at) {
     toast.error("Veuillez vérifier votre email avant d'accéder au site");
     return <Navigate to="/login" />;
@@ -34,7 +35,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Public Route Component (redirects to home if already logged in)
+// Public Route Component
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
@@ -65,6 +66,22 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Product />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/support"
+        element={
+          <ProtectedRoute>
+            <Support />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/api"
+        element={
+          <ProtectedRoute>
+            <Api />
           </ProtectedRoute>
         }
       />
