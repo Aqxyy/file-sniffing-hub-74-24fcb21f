@@ -40,6 +40,7 @@ const Product = () => {
               { text: "Résultats limités" },
               { text: "Support basique" }
             ]}
+            buttonText=""
           />
           <PricingPlan 
             name="Standard" 
@@ -63,7 +64,7 @@ const Product = () => {
             buttonText="S'abonner"
             features={[
               { text: "Tout le plan Standard" },
-              { text: "API Access" },
+              { text: "Clé API personnelle" },
               { text: "Support dédié 24/7" },
               { text: "Exports illimités" },
               { text: "Personnalisation avancée" }
@@ -77,7 +78,7 @@ const Product = () => {
             variant="default"
             buttonText="S'abonner"
             features={[
-              { text: "Accès API illimité" },
+              { text: "Clé API personnelle illimitée" },
               { text: "Support dédié 24/7" },
               { text: "Accès à vie" },
               { text: "Mises à jour gratuites" },

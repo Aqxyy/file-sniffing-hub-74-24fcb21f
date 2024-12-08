@@ -4,11 +4,32 @@ import os
 import time
 from concurrent.futures import ThreadPoolExecutor
 import re
+import jwt
+from functools import wraps
 
 app = Flask(__name__)
 CORS(app)
 
 DATA_DIR = "data"
+
+def verify_api_key(api_key):
+    # TODO: Implement actual API key verification against Supabase
+    # For now, we'll just check if it starts with "sk_"
+    return api_key.startswith("sk_")
+
+def require_api_key(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        api_key = request.headers.get('Authorization')
+        if not api_key:
+            return jsonify({"error": "No API key provided"}), 401
+        
+        api_key = api_key.replace('Bearer ', '')
+        if not verify_api_key(api_key):
+            return jsonify({"error": "Invalid API key"}), 401
+            
+        return f(*args, **kwargs)
+    return decorated
 
 def search_in_file(file_path, keyword):
     try:
@@ -34,6 +55,7 @@ def get_all_files(directory):
     return all_files
 
 @app.route('/search', methods=['POST'])
+@require_api_key
 def search():
     data = request.get_json()
     keyword = data.get('keyword', '')
@@ -44,7 +66,6 @@ def search():
     start_time = time.time()
     all_files = get_all_files(DATA_DIR)
     
-    # Utilisation du multithreading pour accélérer la recherche
     with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
         search_results = list(filter(None, executor.map(
             lambda x: search_in_file(x, keyword), 
@@ -61,7 +82,6 @@ def search():
     })
 
 if __name__ == '__main__':
-    # Créer le dossier data s'il n'existe pas
     if not os.path.exists(DATA_DIR):
         os.makedirs(DATA_DIR)
     app.run(debug=True, port=5000)
