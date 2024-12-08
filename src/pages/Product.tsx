@@ -21,7 +21,7 @@ const Product = () => {
         .from('subscriptions')
         .select('plan_type, status, api_access')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle(); // Use maybeSingle instead of single
         
       if (error) {
         console.error('Error fetching subscription:', error);
@@ -65,7 +65,7 @@ const Product = () => {
               { text: "Support basique" }
             ]}
             buttonText=""
-            currentPlan={subscription?.plan_type === 'free'}
+            currentPlan={!subscription?.plan_type || subscription.plan_type === 'free'}
           />
           <PricingPlan 
             name="Standard" 
@@ -80,7 +80,7 @@ const Product = () => {
               { text: "Accès aux bases premium" }
             ]}
             priceId="price_1QTZHvEeS2EtyeTMNWeSozYu"
-            currentPlan={subscription?.plan_type === 'standard'}
+            currentPlan={subscription?.plan_type === 'standard' && subscription.status === 'active'}
           />
           <PricingPlan 
             name="Pro" 
@@ -96,7 +96,7 @@ const Product = () => {
               { text: "Personnalisation avancée" }
             ]}
             priceId="price_1QTZHIEeS2EtyeTMIobx6y3O"
-            currentPlan={subscription?.plan_type === 'pro'}
+            currentPlan={subscription?.plan_type === 'pro' && subscription.status === 'active'}
           />
           <PricingPlan 
             name="API Lifetime" 
@@ -112,7 +112,7 @@ const Product = () => {
               { text: "Personnalisation avancée" }
             ]}
             priceId="price_1QTZwZEeS2EtyeTMcYOFcClK"
-            currentPlan={subscription?.plan_type === 'lifetime' && subscription?.api_access}
+            currentPlan={subscription?.plan_type === 'lifetime' && subscription.status === 'active' && subscription.api_access}
           />
         </div>
 

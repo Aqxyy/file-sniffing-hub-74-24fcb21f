@@ -36,7 +36,7 @@ serve(async (req) => {
       .select('*')
       .eq('user_id', user.id)
       .eq('status', 'active')
-      .single()
+      .maybeSingle() // Use maybeSingle instead of single
 
     console.log("Subscription data:", subscription)
     
@@ -46,15 +46,18 @@ serve(async (req) => {
     }
 
     if (!subscription) {
+      console.error("No active subscription found for user:", user.id)
       throw new Error('No active subscription found')
     }
 
     if (!['pro', 'lifetime'].includes(subscription.plan_type)) {
+      console.error("Invalid plan type:", subscription.plan_type)
       throw new Error('Subscription plan does not include API access')
     }
 
     // Check if API access is enabled for this subscription
     if (!subscription.api_access) {
+      console.error("API access not enabled for subscription:", subscription.id)
       throw new Error('API access not enabled for this subscription')
     }
 
@@ -62,7 +65,7 @@ serve(async (req) => {
     const { data: siteSettings, error: settingsError } = await supabaseClient
       .from('site_settings')
       .select('api_enabled')
-      .single()
+      .maybeSingle() // Use maybeSingle here too
 
     if (settingsError) {
       console.error("Site settings error:", settingsError)
@@ -70,6 +73,7 @@ serve(async (req) => {
     }
 
     if (!siteSettings?.api_enabled) {
+      console.error("Global API access is disabled")
       throw new Error('API access is currently disabled')
     }
 
