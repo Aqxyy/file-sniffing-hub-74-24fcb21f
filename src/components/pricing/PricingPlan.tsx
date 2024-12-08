@@ -123,8 +123,8 @@ const PricingPlan = ({
             <PayPalButtons
               style={{ 
                 layout: "vertical",
-                color: "blue",
-                label: "pay"
+                shape: "rect",
+                label: "subscribe"
               }}
               createOrder={(data, actions) => {
                 return actions.order.create({
