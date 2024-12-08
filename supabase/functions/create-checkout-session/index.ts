@@ -25,10 +25,20 @@ serve(async (req) => {
     const price = await stripe.prices.retrieve(priceId);
     console.log('Retrieved price details:', price);
 
+    // Use test price IDs for development
+    const testPriceIds = {
+      'price_1QTZHvEeS2EtyeTMNWeSozYu': 'price_1QTZHvEeS2EtyeTMNWeSozYu_test',
+      'price_1QTZHIEeS2EtyeTMIobx6y3O': 'price_1QTZHIEeS2EtyeTMIobx6y3O_test',
+      'price_1QTZwZEeS2EtyeTMcYOFcClK': 'price_1QTZwZEeS2EtyeTMcYOFcClK_test'
+    };
+
+    // Use test price ID if in development
+    const finalPriceId = process.env.NODE_ENV === 'development' ? testPriceIds[priceId] || priceId : priceId;
+
     const session = await stripe.checkout.sessions.create({
       line_items: [
         {
-          price: priceId,
+          price: finalPriceId,
           quantity: 1,
         },
       ],
