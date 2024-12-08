@@ -116,31 +116,37 @@ const PricingPlan = ({
       </ul>
       {buttonText && name !== "Gratuit" && (
         <PayPalScriptProvider options={{ 
-          clientId: "AZDxjDScFpQtjWTOUtWKbyN_bDt4OgqaF4eYXlewfBP4-8aqX3PiV8e1GWU6liB2CUXlkA59kJXE7M6R",
+          clientId: "VOTRE_CLIENT_ID_PAYPAL",
           currency: "EUR" 
         }}>
-          <PayPalButtons
-            style={{ layout: "horizontal" }}
-            createOrder={(data, actions) => {
-              return actions.order.create({
-                intent: "CAPTURE",
-                purchase_units: [
-                  {
-                    amount: {
-                      value: priceNumber.toString(),
-                      currency_code: "EUR"
-                    },
-                    description: `Abonnement ${name}`
-                  }
-                ]
-              });
-            }}
-            onApprove={handlePaypalApprove}
-            onError={(err) => {
-              console.error("PayPal Error:", err);
-              toast.error("Une erreur est survenue avec PayPal");
-            }}
-          />
+          <div className={`w-full ${getButtonClass()} rounded-md text-white font-medium`}>
+            <PayPalButtons
+              style={{ 
+                layout: "vertical",
+                color: "blue",
+                label: "s'abonner"
+              }}
+              createOrder={(data, actions) => {
+                return actions.order.create({
+                  intent: "CAPTURE",
+                  purchase_units: [
+                    {
+                      amount: {
+                        value: priceNumber.toString(),
+                        currency_code: "EUR"
+                      },
+                      description: `Abonnement ${name}`
+                    }
+                  ]
+                });
+              }}
+              onApprove={handlePaypalApprove}
+              onError={(err) => {
+                console.error("PayPal Error:", err);
+                toast.error("Une erreur est survenue avec PayPal");
+              }}
+            />
+          </div>
         </PayPalScriptProvider>
       )}
     </div>
