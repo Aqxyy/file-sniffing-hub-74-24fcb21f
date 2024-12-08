@@ -1,9 +1,8 @@
--- Create site_settings table
-CREATE TABLE IF NOT EXISTS site_settings (
-    id INTEGER PRIMARY KEY,
-    api_enabled BOOLEAN DEFAULT true
+create table public.site_settings (
+    id bigint primary key generated always as identity,
+    api_enabled boolean default true,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
 -- Insert default settings
-INSERT INTO site_settings (id, api_enabled) VALUES (1, true)
-ON CONFLICT (id) DO NOTHING;
+insert into public.site_settings (api_enabled) values (true);

@@ -4,20 +4,13 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
+import UserTable from "@/components/admin/UserTable";
+import ApiSettings from "@/components/admin/ApiSettings";
 
 interface UserData {
   id: string;
@@ -161,7 +154,16 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 p-8">
-      <h1 className="text-3xl font-bold text-white mb-8">Panel Administrateur</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-white">Panel Administrateur</h1>
+        <Button 
+          variant="outline" 
+          onClick={() => navigate(-1)}
+          className="text-white"
+        >
+          Retour
+        </Button>
+      </div>
       
       <Tabs defaultValue="database" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-8">
@@ -172,61 +174,19 @@ const Admin = () => {
         <TabsContent value="database">
           <div className="bg-gray-800/50 rounded-lg p-6">
             <h2 className="text-xl font-semibold text-white mb-4">Gestion des Utilisateurs</h2>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-white">Email</TableHead>
-                  <TableHead className="text-white">Plan</TableHead>
-                  <TableHead className="text-white">Statut</TableHead>
-                  <TableHead className="text-white">Accès API</TableHead>
-                  <TableHead className="text-white">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="text-white">{user.email}</TableCell>
-                    <TableCell className="text-white">{user.plan_type}</TableCell>
-                    <TableCell className="text-white">{user.status}</TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={user.api_access}
-                        onCheckedChange={() => toggleApiAccess(user.id, user.api_access)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant={user.status === 'active' ? 'destructive' : 'default'}
-                        onClick={() => toggleSubscriptionStatus(user.id, user.status)}
-                        size="sm"
-                      >
-                        {user.status === 'active' ? 'Désactiver' : 'Activer'}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <UserTable 
+              users={users}
+              onToggleApiAccess={toggleApiAccess}
+              onToggleStatus={toggleSubscriptionStatus}
+            />
           </div>
         </TabsContent>
         
         <TabsContent value="settings">
-          <div className="bg-gray-800/50 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-white mb-4">Paramètres du site</h2>
-            <div className="flex items-center space-x-4">
-              <span className="text-white">Accès API</span>
-              <Switch
-                checked={apiEnabled}
-                onCheckedChange={toggleApiStatus}
-              />
-              <span className="text-gray-400">
-                {apiEnabled ? 'Activé' : 'Désactivé'}
-              </span>
-            </div>
-            <p className="text-gray-400 mt-2 text-sm">
-              Active ou désactive l'accès à l'API pour tous les utilisateurs ayant un plan Pro ou API Lifetime
-            </p>
-          </div>
+          <ApiSettings 
+            apiEnabled={apiEnabled}
+            onToggleApi={toggleApiStatus}
+          />
         </TabsContent>
       </Tabs>
     </div>
