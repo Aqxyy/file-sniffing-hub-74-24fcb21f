@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { Database, Lock } from "lucide-react";
+import { Database } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
@@ -19,8 +19,9 @@ const Login = () => {
     try {
       await signIn(email, password);
       toast.success("Connexion réussie");
-    } catch (error) {
-      toast.error("Erreur lors de la connexion");
+    } catch (error: any) {
+      console.error("Login error:", error);
+      toast.error(error.message || "Erreur lors de la connexion");
     } finally {
       setIsLoading(false);
     }
