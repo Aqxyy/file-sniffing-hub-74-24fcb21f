@@ -44,12 +44,12 @@ const Product = () => {
           />
           <PricingPlan 
             name="Standard" 
-            price="19.99" 
+            price="9.99" 
             period="€/mois"
             variant="popular"
-            buttonText="Essai gratuit de 7 jours"
+            buttonText="S'abonner"
             features={[
-              { text: "Recherches illimitées" },
+              { text: "35 recherches par jour" },
               { text: "Accès complet aux résultats" },
               { text: "Support prioritaire" },
               { text: "Accès aux bases premium" }
@@ -57,16 +57,16 @@ const Product = () => {
             priceId="price_1QTaXfEeS2EtyeTMzMA5ts9U"
           />
           <PricingPlan 
-            name="Pro" 
-            price="49.99" 
-            period="€/mois"
-            variant="default"
-            buttonText="Contacter les ventes"
+            name="API Lifetime" 
+            price="499.99" 
+            period="€"
+            variant="lifetime"
+            buttonText="Accès à vie"
             features={[
-              { text: "Tout le plan Standard" },
-              { text: "API Access" },
+              { text: "Accès API illimité" },
               { text: "Support dédié 24/7" },
-              { text: "Exports illimités" },
+              { text: "Accès à vie" },
+              { text: "Mises à jour gratuites" },
               { text: "Personnalisation avancée" }
             ]}
             priceId="price_1QTaXPEeS2EtyeTMAfT6QyVE"
