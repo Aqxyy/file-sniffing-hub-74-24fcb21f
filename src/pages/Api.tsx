@@ -14,6 +14,19 @@ const Api = () => {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
 
+  const { data: apiStatus } = useQuery({
+    queryKey: ["api-status"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('api_enabled')
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: subscription } = useQuery({
     queryKey: ["subscription"],
     queryFn: async () => {
@@ -60,7 +73,7 @@ const Api = () => {
       
       return response.json();
     },
-    enabled: subscription?.subscribed && ["pro", "lifetime"].includes(subscription?.subscription?.plan_type),
+    enabled: subscription?.subscribed && ["pro", "lifetime"].includes(subscription?.subscription?.plan_type) && apiStatus?.api_enabled,
   });
 
   const copyToClipboard = async () => {
@@ -71,6 +84,26 @@ const Api = () => {
       setTimeout(() => setCopied(false), 2000);
     }
   };
+
+  if (!apiStatus?.api_enabled) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+        <NavButtons />
+        <div className="container mx-auto px-4 py-16">
+          <Button 
+            variant="ghost" 
+            className="text-white mb-4"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Retour
+          </Button>
+          <h1 className="text-4xl font-bold text-white mb-4">API temporairement désactivée</h1>
+          <p className="text-gray-300 mb-4">L'accès à l'API a été temporairement désactivé par l'administrateur. Veuillez réessayer plus tard.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!subscription?.subscribed || !["pro", "lifetime"].includes(subscription?.subscription?.plan_type)) {
     return (

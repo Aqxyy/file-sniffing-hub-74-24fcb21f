@@ -31,10 +31,12 @@ const Admin = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [apiEnabled, setApiEnabled] = useState(true);
 
   useEffect(() => {
     checkAdminAccess();
     fetchUsers();
+    fetchApiStatus();
   }, []);
 
   const checkAdminAccess = async () => {
@@ -45,11 +47,42 @@ const Admin = () => {
     }
   };
 
+  const fetchApiStatus = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('api_enabled')
+        .single();
+
+      if (error) throw error;
+      setApiEnabled(data?.api_enabled ?? true);
+    } catch (error) {
+      console.error("Erreur lors de la récupération du statut API:", error);
+      toast.error("Erreur lors de la récupération des paramètres");
+    }
+  };
+
+  const toggleApiStatus = async () => {
+    try {
+      const newStatus = !apiEnabled;
+      const { error } = await supabase
+        .from('site_settings')
+        .upsert({ id: 1, api_enabled: newStatus });
+
+      if (error) throw error;
+      
+      setApiEnabled(newStatus);
+      toast.success(`API ${newStatus ? 'activée' : 'désactivée'} avec succès`);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du statut API:", error);
+      toast.error("Erreur lors de la mise à jour des paramètres");
+    }
+  };
+
   const fetchUsers = async () => {
     try {
       console.log("Fetching users...");
       
-      // First, get all subscriptions
       const { data: subscriptions, error: subError } = await supabase
         .from('subscriptions')
         .select('*, user_email:user_id(email)');
@@ -170,7 +203,19 @@ const Admin = () => {
         <TabsContent value="settings">
           <div className="bg-gray-800/50 rounded-lg p-6">
             <h2 className="text-xl font-semibold text-white mb-4">Paramètres du site</h2>
-            <p className="text-gray-300">Fonctionnalités à venir...</p>
+            <div className="flex items-center space-x-4">
+              <span className="text-white">Accès API</span>
+              <Switch
+                checked={apiEnabled}
+                onCheckedChange={toggleApiStatus}
+              />
+              <span className="text-gray-400">
+                {apiEnabled ? 'Activé' : 'Désactivé'}
+              </span>
+            </div>
+            <p className="text-gray-400 mt-2 text-sm">
+              Active ou désactive l'accès à l'API pour tous les utilisateurs ayant un plan Pro ou API Lifetime
+            </p>
           </div>
         </TabsContent>
       </Tabs>
