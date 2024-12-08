@@ -7,7 +7,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -21,7 +20,6 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization')!
     const token = authHeader.replace('Bearer ', '')
     
-    // Get user data with detailed logging
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
     console.log("User data:", user?.id)
 
@@ -30,7 +28,16 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // Check subscription status with detailed logging
+    // Check if user is admin
+    if (user.email === "williamguerif@gmail.com") {
+      const apiKey = `sk_${crypto.randomUUID()}`
+      return new Response(
+        JSON.stringify({ api_key: apiKey }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Check subscription status
     const { data: subscription, error: subError } = await supabaseClient
       .from('subscriptions')
       .select('*')
@@ -55,7 +62,6 @@ serve(async (req) => {
       throw new Error('Subscription plan does not include API access')
     }
 
-    // Check if API access is enabled for this subscription
     if (!subscription.api_access) {
       console.error("API access not enabled for subscription:", subscription.id)
       throw new Error('API access not enabled for this subscription')
@@ -77,27 +83,24 @@ serve(async (req) => {
       throw new Error('API access is currently disabled')
     }
 
-    // Generate API key
-    const apiKey = `sk_${crypto.randomUUID()}`
+    // Generate API key with additional entropy
+    const timestamp = Date.now().toString(36)
+    const randomBytes = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
+    
+    const apiKey = `sk_${timestamp}_${randomBytes}`
 
     return new Response(
       JSON.stringify({ api_key: apiKey }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
     console.error("Function error:", error.message)
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
     )
   }
 })
