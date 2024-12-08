@@ -56,14 +56,8 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
           clientId: "AZDxjDScFpQtjWTOUtWKbyN_bDt4OgqaF4eYXlewfBP4-8aqX3PiV8e1GWU6liB2CUXlkA59kJXE7M6R",
           currency: "EUR",
           intent: "capture",
-          components: "buttons,funding-eligibility",
-          "enable-funding": "paylater,card",
-          "disable-funding": "credit",
-        }}
-        onError={(err) => {
-          console.error("PayPal Script error:", err);
-          setScriptError(err.message);
-          toast.error("Erreur lors du chargement de PayPal");
+          components: "buttons",
+          "enable-funding": "paylater,card"
         }}
       >
         <div className="min-h-[150px] relative">
@@ -87,6 +81,7 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
               createOrder={(data, actions) => {
                 console.log("Creating PayPal order...");
                 return actions.order.create({
+                  intent: "CAPTURE",
                   purchase_units: [
                     {
                       amount: {
@@ -101,6 +96,7 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
               onApprove={handlePaypalApprove}
               onError={(err) => {
                 console.error("PayPal Error:", err);
+                setScriptError(err.message);
                 toast.error("Une erreur est survenue avec PayPal");
               }}
               onCancel={() => {
