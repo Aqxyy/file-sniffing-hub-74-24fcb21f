@@ -54,7 +54,7 @@ const PricingPlan = ({
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
-      console.log("Checking session:", session);
+      console.log("Current session:", session);
       
       if (!session?.access_token) {
         toast.error("Vous devez être connecté pour souscrire");
@@ -83,18 +83,15 @@ const PricingPlan = ({
       if (data?.url) {
         window.location.href = data.url;
       } else {
-        throw new Error("URL de paiement manquante");
+        throw new Error("URL de paiement manquante dans la réponse");
       }
     } catch (error) {
       console.error("Payment error:", error);
-      toast.error("Une erreur est survenue lors de la redirection vers le paiement");
+      toast.error("Une erreur est survenue lors de la redirection vers le paiement. Veuillez réessayer.");
     }
   };
 
   const getBackgroundClass = () => {
-    if (name === "Gratuit") {
-      return "bg-transparent"; // Remove gray frame for free plan
-    }
     switch (variant) {
       case "popular":
         return "bg-gray-800/50 border-blue-500 border-2";
