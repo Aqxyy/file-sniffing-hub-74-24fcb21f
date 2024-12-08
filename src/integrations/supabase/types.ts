@@ -9,6 +9,24 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      site_settings: {
+        Row: {
+          api_enabled: boolean | null
+          created_at: string
+          id: number
+        }
+        Insert: {
+          api_enabled?: boolean | null
+          created_at?: string
+          id?: never
+        }
+        Update: {
+          api_enabled?: boolean | null
+          created_at?: string
+          id?: never
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string | null
@@ -37,11 +55,36 @@ export type Database = {
           stripe_subscription_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          email: string | null
+          email_confirmed_at: string | null
+          id: string | null
+        }
+        Insert: {
+          email?: string | null
+          email_confirmed_at?: string | null
+          id?: string | null
+        }
+        Update: {
+          email?: string | null
+          email_confirmed_at?: string | null
+          id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

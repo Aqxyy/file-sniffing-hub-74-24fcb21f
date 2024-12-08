@@ -11,6 +11,16 @@ interface UserData {
   api_access: boolean;
 }
 
+interface SubscriptionWithProfile {
+  user_id: string;
+  plan_type: string;
+  status: string;
+  api_access: boolean;
+  profiles: {
+    email: string;
+  } | null;
+}
+
 export const UserManagement = () => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +39,7 @@ export const UserManagement = () => {
           profiles!subscriptions_user_id_fkey (
             email
           )
-        `);
+        `) as { data: SubscriptionWithProfile[] | null, error: any };
 
       if (subError) {
         console.error("Subscription fetch error:", subError);
