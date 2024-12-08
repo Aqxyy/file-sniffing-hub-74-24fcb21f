@@ -22,8 +22,13 @@ export const UserManagement = () => {
       const { data: subscriptions, error: subError } = await supabase
         .from('subscriptions')
         .select(`
-          *,
-          user:profiles(email)
+          user_id,
+          plan_type,
+          status,
+          api_access,
+          profiles!subscriptions_user_id_fkey (
+            email
+          )
         `);
 
       if (subError) {
@@ -35,7 +40,7 @@ export const UserManagement = () => {
 
       const formattedUsers = subscriptions?.map(sub => ({
         id: sub.user_id,
-        email: sub.user?.email || 'Email non disponible',
+        email: sub.profiles?.email || 'Email non disponible',
         plan_type: sub.plan_type,
         status: sub.status,
         api_access: sub.api_access || false

@@ -31,7 +31,6 @@ serve(async (req) => {
       .select('*')
       .eq('user_id', user.id)
       .eq('status', 'active')
-      .gte('current_period_end', new Date().toISOString())
       .single()
 
     if (subError || !subscription) {
@@ -42,33 +41,28 @@ serve(async (req) => {
       throw new Error('Subscription plan does not include API access')
     }
 
-    // Générer ou récupérer la clé API
-    const { data: existingKey } = await supabaseClient
-      .from('api_keys')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('is_active', true)
+    // Vérifier si l'API est activée globalement
+    const { data: siteSettings, error: settingsError } = await supabaseClient
+      .from('site_settings')
+      .select('api_enabled')
       .single()
 
-    if (existingKey) {
-      return new Response(
-        JSON.stringify({ api_key: existingKey.api_key }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    if (settingsError) throw settingsError
+    if (!siteSettings?.api_enabled) {
+      throw new Error('API access is currently disabled')
     }
 
-    const { data: newKey, error: keyError } = await supabaseClient.rpc('generate_api_key')
-    if (keyError) throw keyError
-
-    const { error: insertError } = await supabaseClient
-      .from('api_keys')
-      .insert([{ user_id: user.id, api_key: newKey }])
-
-    if (insertError) throw insertError
+    // Générer une clé API simple (à améliorer en production)
+    const apiKey = `sk_${crypto.randomUUID()}`
 
     return new Response(
-      JSON.stringify({ api_key: newKey }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ api_key: apiKey }),
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      }
     )
 
   } catch (error) {
