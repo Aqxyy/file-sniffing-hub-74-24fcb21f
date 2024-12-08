@@ -16,24 +16,24 @@ serve(async (req) => {
     
     console.log('Creating checkout session for price:', priceId, 'and user:', userId)
 
-    // Get the price to determine if it's a one-time payment or subscription
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
       apiVersion: '2023-10-16',
     })
 
-    // Get the price details first
-    const price = await stripe.prices.retrieve(priceId);
-    console.log('Retrieved price details:', price);
-
-    // Use test price IDs for development
-    const testPriceIds = {
+    // Map live price IDs to test price IDs
+    const testPriceIds: { [key: string]: string } = {
       'price_1QTZHvEeS2EtyeTMNWeSozYu': 'price_1QTZHvEeS2EtyeTMNWeSozYu_test',
       'price_1QTZHIEeS2EtyeTMIobx6y3O': 'price_1QTZHIEeS2EtyeTMIobx6y3O_test',
       'price_1QTZwZEeS2EtyeTMcYOFcClK': 'price_1QTZwZEeS2EtyeTMcYOFcClK_test'
     };
 
-    // Use test price ID if in development
-    const finalPriceId = process.env.NODE_ENV === 'development' ? testPriceIds[priceId] || priceId : priceId;
+    // Determine if we're in test mode by checking the Stripe key
+    const isTestMode = Deno.env.get('STRIPE_SECRET_KEY')?.startsWith('sk_test_');
+    console.log('Stripe mode:', isTestMode ? 'test' : 'live');
+
+    // Use test price ID if in test mode
+    const finalPriceId = isTestMode ? (testPriceIds[priceId] || priceId) : priceId;
+    console.log('Using price ID:', finalPriceId);
 
     const session = await stripe.checkout.sessions.create({
       line_items: [
@@ -42,7 +42,7 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: price.type === 'recurring' ? 'subscription' : 'payment',
+      mode: 'subscription',
       success_url: `${req.headers.get('origin')}/`,
       cancel_url: `${req.headers.get('origin')}/product`,
       client_reference_id: userId,
@@ -60,8 +60,15 @@ serve(async (req) => {
     )
   } catch (error) {
     console.error('Error creating checkout session:', error)
+    
+    // Provide more specific error messages
+    let errorMessage = error.message;
+    if (error.message.includes('cannot currently make live charges')) {
+      errorMessage = 'Stripe account is in test mode. Please use test credit card numbers for payments.';
+    }
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
