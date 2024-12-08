@@ -1,10 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { CheckIcon } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
-import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
 import { useState } from "react";
+import PricingFeatures from "./PricingFeatures";
+import PaymentOptions from "./PaymentOptions";
 
 interface PricingFeature {
   text: string;
@@ -15,7 +12,6 @@ interface PricingPlanProps {
   price?: string;
   period?: string;
   features?: PricingFeature[];
-  onSubscribe?: () => void;
   buttonText?: string;
   variant?: "default" | "popular" | "lifetime";
   className?: string;
@@ -35,50 +31,10 @@ const PricingPlan = ({
   buttonText = "S'abonner",
   variant = "default",
   className = "",
-  priceId = "",
   currentPlan = false,
 }: PricingPlanProps) => {
-  const { toast: toastNotification } = useToast();
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-
-  const handlePaypalApprove = async (data: any, actions: any) => {
-    try {
-      setIsProcessing(true);
-      const order = await actions.order.capture();
-      console.log("PayPal order completed:", order);
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) {
-        toast.error("Erreur d'authentification");
-        return;
-      }
-
-      const { error } = await supabase
-        .from('subscriptions')
-        .upsert({
-          user_id: session.user.id,
-          plan_type: name.toLowerCase(),
-          status: 'active',
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        });
-
-      if (error) {
-        console.error("Erreur lors de la mise à jour de l'abonnement:", error);
-        toast.error("Erreur lors de la mise à jour de l'abonnement");
-        return;
-      }
-
-      toast.success("Paiement réussi ! Votre abonnement est maintenant actif.");
-      window.location.href = '/';
-    } catch (error) {
-      console.error("Erreur PayPal:", error);
-      toast.error("Une erreur est survenue lors du paiement");
-    } finally {
-      setIsProcessing(false);
-      setShowPaymentOptions(false);
-    }
-  };
 
   const getBackgroundClass = () => {
     switch (variant) {
@@ -120,14 +76,9 @@ const PricingPlan = ({
       <p className="text-4xl font-bold text-white mb-6">
         {price}{period}
       </p>
-      <ul className="space-y-4 mb-8">
-        {features.map((feature, index) => (
-          <li key={index} className="flex items-center text-gray-300">
-            <CheckIcon className="w-5 h-5 text-blue-500 mr-2" />
-            {feature.text}
-          </li>
-        ))}
-      </ul>
+      
+      <PricingFeatures features={features} />
+      
       {buttonText && name !== "Gratuit" && !currentPlan && (
         <>
           {!showPaymentOptions ? (
@@ -139,55 +90,12 @@ const PricingPlan = ({
               {buttonText}
             </Button>
           ) : (
-            <PayPalScriptProvider options={{ 
-              clientId: "AQSK9-m4vRwgDgQwhSipOw56fmMZJPSTWdBeUllYIFIqVSVLUDec_aGnaqnOC-6bKpYRaS68DPaZGnts",
-              currency: "EUR",
-              intent: "CAPTURE"
-            }}>
-              <div className="w-full space-y-4">
-                <PayPalButtons
-                  style={{ 
-                    layout: "vertical",
-                    shape: "rect",
-                    label: "subscribe"
-                  }}
-                  disabled={isProcessing}
-                  createOrder={(data, actions) => {
-                    console.log("Creating PayPal order...");
-                    return actions.order.create({
-                      intent: "CAPTURE",
-                      purchase_units: [
-                        {
-                          amount: {
-                            value: priceNumber.toString(),
-                            currency_code: "EUR"
-                          },
-                          description: `Abonnement ${name}`
-                        }
-                      ]
-                    });
-                  }}
-                  onApprove={handlePaypalApprove}
-                  onError={(err) => {
-                    console.error("PayPal Error:", err);
-                    toast.error("Une erreur est survenue avec PayPal");
-                    setIsProcessing(false);
-                  }}
-                  onCancel={() => {
-                    setShowPaymentOptions(false);
-                    setIsProcessing(false);
-                  }}
-                />
-                <Button 
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setShowPaymentOptions(false)}
-                  disabled={isProcessing}
-                >
-                  Retour
-                </Button>
-              </div>
-            </PayPalScriptProvider>
+            <PaymentOptions
+              priceNumber={priceNumber}
+              planName={name}
+              onCancel={() => setShowPaymentOptions(false)}
+              isProcessing={isProcessing}
+            />
           )}
         </>
       )}
