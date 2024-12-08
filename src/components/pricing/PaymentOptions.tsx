@@ -54,12 +54,11 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
     <div className="w-full space-y-4">
       <PayPalScriptProvider 
         options={{ 
-          clientId: "AZDxjDScFpQtjWTOUtWKbyN_bDt4OgqaF4eYXlewfBP4-8aqX3PiV8e1GWU6liB2CUXlkA59kJXE7M6R",
+          "client-id": "AZDxjDScFpQtjWTOUtWKbyN_bDt4OgqaF4eYXlewfBP4-8aqX3PiV8e1GWU6liB2CUXlkA59kJXE7M6R",
           currency: "EUR",
           intent: "capture",
-          components: "buttons",
-          'enable-funding': 'paylater,venmo',
-          'disable-funding': 'card'
+          "disable-funding": "card",
+          "enable-funding": "paypal"
         }}
       >
         <div className="min-h-[150px]">
@@ -79,7 +78,6 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
               createOrder={(data, actions) => {
                 console.log("Creating PayPal order...");
                 return actions.order.create({
-                  intent: "CAPTURE",
                   purchase_units: [
                     {
                       amount: {
