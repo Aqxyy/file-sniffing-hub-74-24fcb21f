@@ -47,45 +47,50 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
 
   return (
     <div className="w-full space-y-4">
-      <PayPalScriptProvider options={{ 
-        clientId: "AQSK9-m4vRwgDgQwhSipOw56fmMZJPSTWdBeUllYIFIqVSVLUDec_aGnaqnOC-6bKpYRaS68DPaZGnts",
-        currency: "EUR",
-        intent: "CAPTURE"
-      }}>
-        <PayPalButtons
-          style={{ 
-            layout: "vertical",
-            shape: "rect",
-            label: "subscribe"
-          }}
-          disabled={isProcessing}
-          createOrder={(data, actions) => {
-            console.log("Creating PayPal order...");
-            return actions.order.create({
-              intent: "CAPTURE",
-              purchase_units: [
-                {
-                  amount: {
-                    value: priceNumber.toString(),
-                    currency_code: "EUR"
-                  },
-                  description: `Abonnement ${planName}`
-                }
-              ]
-            });
-          }}
-          onApprove={handlePaypalApprove}
-          onError={(err) => {
-            console.error("PayPal Error:", err);
-            toast.error("Une erreur est survenue avec PayPal");
-          }}
-          onCancel={() => {
-            onCancel();
-          }}
-        />
+      <PayPalScriptProvider 
+        options={{ 
+          clientId: "AQSK9-m4vRwgDgQwhSipOw56fmMZJPSTWdBeUllYIFIqVSVLUDec_aGnaqnOC-6bKpYRaS68DPaZGnts",
+          currency: "EUR",
+          intent: "capture",
+          components: "buttons"
+        }}
+      >
+        <div className="min-h-[150px]">
+          <PayPalButtons
+            style={{ 
+              layout: "vertical",
+              shape: "rect",
+              color: "gold"
+            }}
+            disabled={isProcessing}
+            createOrder={(data, actions) => {
+              console.log("Creating PayPal order...");
+              return actions.order.create({
+                purchase_units: [
+                  {
+                    amount: {
+                      value: priceNumber.toString(),
+                      currency_code: "EUR"
+                    },
+                    description: `Abonnement ${planName}`
+                  }
+                ]
+              });
+            }}
+            onApprove={handlePaypalApprove}
+            onError={(err) => {
+              console.error("PayPal Error:", err);
+              toast.error("Une erreur est survenue avec PayPal");
+            }}
+            onCancel={() => {
+              console.log("Payment cancelled");
+              onCancel();
+            }}
+          />
+        </div>
         <Button 
           variant="outline"
-          className="w-full"
+          className="w-full mt-4"
           onClick={onCancel}
           disabled={isProcessing}
         >
