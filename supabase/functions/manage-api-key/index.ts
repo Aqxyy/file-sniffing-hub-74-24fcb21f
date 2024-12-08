@@ -25,12 +25,13 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // Check if user has an active subscription
+    // Vérifier si l'utilisateur a un abonnement actif et valide
     const { data: subscription, error: subError } = await supabaseClient
       .from('subscriptions')
       .select('*')
       .eq('user_id', user.id)
       .eq('status', 'active')
+      .gte('current_period_end', new Date().toISOString())
       .single()
 
     if (subError || !subscription) {
@@ -41,7 +42,7 @@ serve(async (req) => {
       throw new Error('Subscription plan does not include API access')
     }
 
-    // Generate or retrieve API key
+    // Générer ou récupérer la clé API
     const { data: existingKey } = await supabaseClient
       .from('api_keys')
       .select('*')

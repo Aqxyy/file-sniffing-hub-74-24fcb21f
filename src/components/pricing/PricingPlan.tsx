@@ -120,32 +120,41 @@ const PricingPlan = ({
           currency: "EUR" 
         }}>
           <div className={`w-full ${getButtonClass()} rounded-md text-white font-medium`}>
-            <PayPalButtons
-              style={{ 
-                layout: "vertical",
-                shape: "rect",
-                label: "subscribe"
+            <Button 
+              className="w-full"
+              onClick={() => {
+                const paypalButtons = document.querySelector('[data-paypal-button="true"]');
+                if (paypalButtons) {
+                  (paypalButtons as HTMLElement).click();
+                }
               }}
-              createOrder={(data, actions) => {
-                return actions.order.create({
-                  intent: "CAPTURE",
-                  purchase_units: [
-                    {
-                      amount: {
-                        value: priceNumber.toString(),
-                        currency_code: "EUR"
-                      },
-                      description: `Abonnement ${name}`
-                    }
-                  ]
-                });
-              }}
-              onApprove={handlePaypalApprove}
-              onError={(err) => {
-                console.error("PayPal Error:", err);
-                toast.error("Une erreur est survenue avec PayPal");
-              }}
-            />
+            >
+              S'abonner
+            </Button>
+            <div className="hidden">
+              <PayPalButtons
+                style={{ layout: "vertical" }}
+                createOrder={(data, actions) => {
+                  return actions.order.create({
+                    intent: "CAPTURE",
+                    purchase_units: [
+                      {
+                        amount: {
+                          value: priceNumber.toString(),
+                          currency_code: "EUR"
+                        },
+                        description: `Abonnement ${name}`
+                      }
+                    ]
+                  });
+                }}
+                onApprove={handlePaypalApprove}
+                onError={(err) => {
+                  console.error("PayPal Error:", err);
+                  toast.error("Une erreur est survenue avec PayPal");
+                }}
+              />
+            </div>
           </div>
         </PayPalScriptProvider>
       )}
