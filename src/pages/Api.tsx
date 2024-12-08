@@ -1,11 +1,12 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Code2, Lock, ArrowLeft } from "lucide-react";
+import { Code2, ArrowLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import NavButtons from "@/components/NavButtons";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { toast } from "@/components/ui/use-toast";
 
 const Api = () => {
   const { user } = useAuth();
@@ -14,25 +15,54 @@ const Api = () => {
   const { data: subscription } = useQuery({
     queryKey: ["subscription"],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error("No access token found");
-      
-      console.log("Calling is-subscribed with token:", session.access_token);
-      
-      const response = await fetch("https://dihvcgtshzhuwnfxhfnu.supabase.co/functions/v1/is-subscribed", {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-      
-      if (!response.ok) {
-        console.error("Subscription check failed:", response.status, response.statusText);
-        throw new Error("Failed to fetch subscription status");
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          console.error("No access token found");
+          toast({
+            title: "Erreur d'authentification",
+            description: "Veuillez vous reconnecter",
+            variant: "destructive",
+          });
+          throw new Error("No access token found");
+        }
+        
+        console.log("Starting subscription check for user:", user?.email);
+        console.log("Using access token:", session.access_token.substring(0, 10) + "...");
+        
+        const response = await fetch("https://dihvcgtshzhuwnfxhfnu.supabase.co/functions/v1/is-subscribed", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        
+        console.log("Response status:", response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Subscription check failed:", response.status, errorText);
+          toast({
+            title: "Erreur de vérification",
+            description: "Impossible de vérifier votre abonnement",
+            variant: "destructive",
+          });
+          throw new Error(`Failed to fetch subscription status: ${errorText}`);
+        }
+        
+        const data = await response.json();
+        console.log("Subscription data:", data);
+        return data;
+      } catch (error) {
+        console.error("Error in subscription check:", error);
+        toast({
+          title: "Erreur",
+          description: "Une erreur est survenue lors de la vérification de votre abonnement",
+          variant: "destructive",
+        });
+        throw error;
       }
-      
-      const data = await response.json();
-      console.log("Subscription data:", data);
-      return data;
     },
     retry: 1,
   });
