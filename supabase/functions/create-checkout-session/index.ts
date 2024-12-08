@@ -20,6 +20,10 @@ serve(async (req) => {
     
     console.log('Creating checkout session for price:', priceId, 'and user:', userId)
 
+    // Get the price to determine if it's a one-time payment or subscription
+    const price = await stripe.prices.retrieve(priceId);
+    const isSubscription = price.type === 'recurring';
+
     const session = await stripe.checkout.sessions.create({
       line_items: [
         {
@@ -27,7 +31,7 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: 'subscription',
+      mode: isSubscription ? 'subscription' : 'payment',
       success_url: `${req.headers.get('origin')}/success`,
       cancel_url: `${req.headers.get('origin')}/product`,
       client_reference_id: userId,
