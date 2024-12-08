@@ -59,7 +59,10 @@ const Product = () => {
       <div className="container mx-auto px-4 py-16">
         <div className="absolute top-4 left-4">
           <Link to="/">
-            <Button variant="outline" className="flex items-center gap-2 border-gray-600 text-white hover:bg-gray-700">
+            <Button 
+              variant="default"
+              className="bg-blue-900 hover:bg-blue-800 text-white flex items-center gap-2"
+            >
               <ArrowLeft className="w-4 h-4" />
               Retour à la recherche
             </Button>
