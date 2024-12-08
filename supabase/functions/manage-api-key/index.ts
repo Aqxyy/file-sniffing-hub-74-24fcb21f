@@ -8,7 +8,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
@@ -19,25 +18,20 @@ serve(async (req) => {
   }
 
   try {
-    // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get authorization header
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       console.error("No authorization header")
       throw new Error('No authorization header')
     }
 
-    // Get user from token
     const token = authHeader.replace('Bearer ', '')
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
     
-    console.log("Checking user:", user?.email)
-
     if (userError || !user) {
       console.error("Auth error:", userError)
       return new Response(
@@ -49,58 +43,38 @@ serve(async (req) => {
       )
     }
 
-    // Check if user is admin first
-    if (user.email === "williamguerif@gmail.com") {
-      console.log("Admin user detected, generating API key")
-      const apiKey = `sk_${crypto.randomUUID()}`
-      return new Response(
-        JSON.stringify({ api_key: apiKey }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // For non-admin users, check subscription status
-    console.log("Checking subscription for user:", user.id)
-    const { data: subscription, error: subError } = await supabaseClient
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .maybeSingle()
-
-    console.log("Subscription data:", subscription)
+    // Check if user is admin
+    const isAdmin = user.email === "williamguerif@gmail.com";
     
-    if (subError) {
-      console.error("Subscription fetch error:", subError)
-      return new Response(
-        JSON.stringify({ error: 'Error fetching subscription' }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500
-        }
-      )
-    }
+    if (!isAdmin) {
+      // For non-admin users, check subscription status
+      const { data: subscription, error: subError } = await supabaseClient
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle()
 
-    if (!subscription) {
-      console.error("No active subscription found for user:", user.id)
-      return new Response(
-        JSON.stringify({ error: 'No active subscription found' }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 403
-        }
-      )
-    }
+      if (subError) {
+        console.error("Subscription fetch error:", subError)
+        return new Response(
+          JSON.stringify({ error: 'Error fetching subscription' }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500
+          }
+        )
+      }
 
-    if (!['pro', 'lifetime'].includes(subscription.plan_type)) {
-      console.error("Invalid plan type:", subscription.plan_type)
-      return new Response(
-        JSON.stringify({ error: 'Subscription plan does not include API access' }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 403
-        }
-      )
+      if (!subscription || !['pro', 'lifetime'].includes(subscription.plan_type)) {
+        return new Response(
+          JSON.stringify({ error: 'No valid subscription found' }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 403
+          }
+        )
+      }
     }
 
     // Check global API status
@@ -111,19 +85,7 @@ serve(async (req) => {
       .limit(1)
       .maybeSingle()
 
-    if (settingsError) {
-      console.error("Site settings error:", settingsError)
-      return new Response(
-        JSON.stringify({ error: 'Error checking API status' }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500
-        }
-      )
-    }
-
-    if (!siteSettings?.api_enabled) {
-      console.error("Global API access is disabled")
+    if (settingsError || !siteSettings?.api_enabled) {
       return new Response(
         JSON.stringify({ error: 'API access is currently disabled' }),
         { 
@@ -133,12 +95,81 @@ serve(async (req) => {
       )
     }
 
-    // Generate API key
-    const apiKey = `sk_${crypto.randomUUID()}`
+    // Handle GET request - fetch existing API key
+    if (req.method === 'GET') {
+      const { data: existingKey, error: keyError } = await supabaseClient
+        .from('api_keys')
+        .select('key_value')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (keyError) {
+        throw keyError;
+      }
+
+      if (existingKey) {
+        return new Response(
+          JSON.stringify({ api_key: existingKey.key_value }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      // If no key exists, generate one
+      const newApiKey = `sk_${crypto.randomUUID()}`;
+      const { error: insertError } = await supabaseClient
+        .from('api_keys')
+        .insert({
+          user_id: user.id,
+          key_value: newApiKey,
+          is_active: true
+        });
+
+      if (insertError) {
+        throw insertError;
+      }
+
+      return new Response(
+        JSON.stringify({ api_key: newApiKey }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Handle POST request - regenerate API key
+    if (req.method === 'POST') {
+      // Désactiver l'ancienne clé
+      await supabaseClient
+        .from('api_keys')
+        .update({ is_active: false })
+        .eq('user_id', user.id)
+        .eq('is_active', true);
+
+      // Générer et insérer une nouvelle clé
+      const newApiKey = `sk_${crypto.randomUUID()}`;
+      const { error: insertError } = await supabaseClient
+        .from('api_keys')
+        .insert({
+          user_id: user.id,
+          key_value: newApiKey,
+          is_active: true
+        });
+
+      if (insertError) {
+        throw insertError;
+      }
+
+      return new Response(
+        JSON.stringify({ api_key: newApiKey }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
     return new Response(
-      JSON.stringify({ api_key: apiKey }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: 'Method not allowed' }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 405
+      }
     )
 
   } catch (error) {
