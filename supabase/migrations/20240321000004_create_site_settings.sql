@@ -5,5 +5,7 @@ CREATE TABLE IF NOT EXISTS public.site_settings (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Insert default settings
-INSERT INTO public.site_settings (api_enabled) VALUES (true);
+-- Insert default settings if not exists
+INSERT INTO public.site_settings (api_enabled)
+SELECT true
+WHERE NOT EXISTS (SELECT 1 FROM public.site_settings);
