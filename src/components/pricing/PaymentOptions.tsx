@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface PaymentOptionsProps {
   priceNumber: number;
@@ -13,6 +13,28 @@ interface PaymentOptionsProps {
 
 const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: PaymentOptionsProps) => {
   const [isPaypalReady, setIsPaypalReady] = useState(true);
+  const [paypalError, setPaypalError] = useState(false);
+
+  useEffect(() => {
+    // Reset PayPal state when component mounts
+    setIsPaypalReady(true);
+    setPaypalError(false);
+
+    // Cleanup function to handle unmounting
+    return () => {
+      setIsPaypalReady(false);
+    };
+  }, []);
+
+  const resetPayPal = () => {
+    setIsPaypalReady(false);
+    setPaypalError(true);
+    // Give more time for PayPal to clean up
+    setTimeout(() => {
+      setPaypalError(false);
+      setIsPaypalReady(true);
+    }, 2000);
+  };
 
   const handlePaypalApprove = async (data: any, actions: any) => {
     try {
@@ -45,9 +67,7 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
     } catch (error) {
       console.error("Erreur PayPal:", error);
       toast.error("Une erreur est survenue lors du paiement");
-      setIsPaypalReady(false);
-      // Reset PayPal state
-      setTimeout(() => setIsPaypalReady(true), 1000);
+      resetPayPal();
     }
   };
 
@@ -62,7 +82,7 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
         }}
       >
         <div className="min-h-[150px]">
-          {isPaypalReady && (
+          {isPaypalReady && !paypalError && (
             <PayPalButtons
               style={{ 
                 layout: "vertical",
@@ -89,9 +109,7 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
               onError={(err) => {
                 console.error("PayPal Error:", err);
                 toast.error("Une erreur est survenue avec PayPal");
-                setIsPaypalReady(false);
-                // Reset PayPal state
-                setTimeout(() => setIsPaypalReady(true), 1000);
+                resetPayPal();
               }}
               onCancel={() => {
                 console.log("Payment cancelled");
@@ -99,6 +117,11 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
                 onCancel();
               }}
             />
+          )}
+          {paypalError && (
+            <div className="text-center text-sm text-gray-500">
+              Rechargement du module de paiement...
+            </div>
           )}
         </div>
         <Button 
