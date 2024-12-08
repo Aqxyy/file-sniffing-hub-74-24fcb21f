@@ -21,41 +21,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const supabase = getSupabase();
+      console.log("Initialisation de l'auth context");
       
       supabase.auth.getSession().then(({ data: { session } }) => {
+        console.log("Session récupérée:", session ? "Connecté" : "Non connecté");
         setUser(session?.user ?? null);
         setLoading(false);
       });
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        console.log("Changement d'état auth:", _event);
         setUser(session?.user ?? null);
       });
 
       return () => subscription.unsubscribe();
     } catch (error) {
-      console.error('Erreur lors de l\'initialisation de l\'auth:', error);
+      console.error("Erreur lors de l'initialisation de l'auth:", error);
       setLoading(false);
     }
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    console.log("Tentative de connexion pour:", email);
     const supabase = getSupabase();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    const { error, data } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      console.error("Erreur de connexion:", error);
+      throw error;
+    }
+    console.log("Connexion réussie:", data);
     navigate('/');
   };
 
   const signUp = async (email: string, password: string) => {
+    console.log("Tentative d'inscription pour:", email);
     const supabase = getSupabase();
-    const { error } = await supabase.auth.signUp({ email, password });
-    if (error) throw error;
-    navigate('/login');
+    const { error, data } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      console.error("Erreur d'inscription:", error);
+      throw error;
+    }
+    console.log("Inscription réussie:", data);
+    if (data.user) {
+      console.log("Redirection vers login après inscription réussie");
+      navigate('/login');
+    }
   };
 
   const signOut = async () => {
+    console.log("Tentative de déconnexion");
     const supabase = getSupabase();
     const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    if (error) {
+      console.error("Erreur de déconnexion:", error);
+      throw error;
+    }
+    console.log("Déconnexion réussie");
     navigate('/login');
   };
 
