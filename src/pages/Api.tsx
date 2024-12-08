@@ -15,88 +15,87 @@ const Api = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  // Fetch API status
   const { data: apiStatus } = useQuery({
     queryKey: ["api-status"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('site_settings')
         .select('api_enabled')
-        .maybeSingle();
+        .single();
       
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: subscription, isError: isSubscriptionError } = useQuery({
-    queryKey: ["subscription"],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error("No access token found");
-      }
-      
-      const response = await fetch("https://dihvcgtshzhuwnfxhfnu.supabase.co/functions/v1/is-subscribed", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch subscription status");
-      }
-      
-      const data = await response.json();
-      console.log("Subscription data:", data);
-      return data;
-    },
-    retry: 1,
-  });
-
-  const { data: apiKey, isLoading, error: apiKeyError } = useQuery({
-    queryKey: ["api-key"],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error("No access token found");
-      }
-      
-      try {
-        const response = await fetch("https://dihvcgtshzhuwnfxhfnu.supabase.co/functions/v1/manage-api-key", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("API key fetch error:", errorData);
-          throw new Error(errorData.error || "Failed to fetch API key");
-        }
-        
-        const data = await response.json();
-        console.log("API key data:", data);
-        return data;
-      } catch (error) {
-        console.error("API key fetch error:", error);
+      if (error) {
+        console.error("Error fetching API status:", error);
         throw error;
       }
+      return data;
     },
-    enabled: !!subscription?.subscribed && ["pro", "lifetime"].includes(subscription?.subscription?.plan_type) && apiStatus?.api_enabled,
+  });
+
+  // Fetch subscription status
+  const { data: subscription } = useQuery({
+    queryKey: ["subscription", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+        
+      if (error) {
+        console.error("Error fetching subscription:", error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Fetch API key only if user has valid subscription or is admin
+  const { data: apiKey, isLoading: isLoadingApiKey } = useQuery({
+    queryKey: ["api-key", user?.id],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("No access token found");
+      }
+      
+      const response = await supabase.functions.invoke('manage-api-key', {
+        method: 'GET',
+      });
+
+      if (response.error) {
+        console.error("API key fetch error:", response.error);
+        throw new Error(response.error.message || "Failed to fetch API key");
+      }
+      
+      return response.data;
+    },
+    enabled: !!user?.id && (
+      user?.email === "williamguerif@gmail.com" || 
+      (subscription?.plan_type === 'pro' || subscription?.plan_type === 'lifetime') && 
+      subscription?.status === 'active' && 
+      subscription?.api_access === true && 
+      apiStatus?.api_enabled === true
+    ),
     retry: false,
   });
 
   const isAdmin = user?.email === "williamguerif@gmail.com";
-  const hasValidSubscription = subscription?.subscribed && ["pro", "lifetime"].includes(subscription?.subscription?.plan_type);
+  const hasValidSubscription = subscription && 
+    ['pro', 'lifetime'].includes(subscription.plan_type) && 
+    subscription.status === 'active' && 
+    subscription.api_access;
 
   console.log("Current user:", user?.email);
   console.log("Is admin:", isAdmin);
   console.log("Has valid subscription:", hasValidSubscription);
   console.log("API status:", apiStatus);
+  console.log("Subscription data:", subscription);
 
   if (!apiStatus?.api_enabled && !isAdmin) {
     return (
@@ -112,18 +111,6 @@ const Api = () => {
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
         <NavButtons />
         <AccessDenied message="Vous devez être abonné au plan PRO ou API Lifetime pour accéder à cette section." />
-      </div>
-    );
-  }
-
-  if (isSubscriptionError) {
-    toast.error("Erreur lors de la vérification de l'abonnement");
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
-        <NavButtons />
-        <div className="container mx-auto px-4 py-16">
-          <div className="text-red-400">Une erreur est survenue lors de la vérification de votre abonnement.</div>
-        </div>
       </div>
     );
   }
@@ -146,17 +133,17 @@ const Api = () => {
           Utilisez cette clé pour accéder à l'API. Ne la partagez avec personne.
         </p>
 
-        {isLoading ? (
+        {isLoadingApiKey ? (
           <div className="text-gray-300">Chargement de votre clé API...</div>
         ) : apiKey?.api_key ? (
           <ApiKeyDisplay apiKey={DOMPurify.sanitize(apiKey.api_key)} />
-        ) : apiKeyError ? (
+        ) : (
           <div className="text-red-400 mb-4">
-            {apiKeyError instanceof Error ? apiKeyError.message : "Erreur lors du chargement de la clé API"}
+            Impossible de récupérer votre clé API. Veuillez vérifier votre abonnement ou contacter le support.
           </div>
-        ) : null}
+        )}
 
-        <h2 className="text-2xl font-semibold text-white mb-4">Documentation</h2>
+        <h2 className="text-2xl font-semibold text-white mb-4 mt-8">Documentation</h2>
         <ApiDocumentation />
       </div>
     </div>
