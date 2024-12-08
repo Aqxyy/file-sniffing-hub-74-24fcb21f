@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { Database } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -13,77 +13,75 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
     try {
       await signIn(email, password);
-      toast.success("Connexion réussie");
+      toast.success("Connexion réussie !");
     } catch (error: any) {
       console.error("Login error:", error);
-      toast.error(error.message || "Erreur lors de la connexion");
+      if (error.message === "Invalid login credentials") {
+        toast.error("Email ou mot de passe incorrect");
+      } else {
+        toast.error("Une erreur est survenue lors de la connexion");
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
-      >
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <Database className="w-12 h-12 text-blue-500" />
-            <h1 className="text-4xl font-bold text-white">ZeenBase</h1>
-          </div>
-          <h2 className="text-2xl font-semibold text-white mb-2">Connexion</h2>
-          <p className="text-gray-400">Accédez à votre compte ZeenBase</p>
-        </div>
-
-        <div className="bg-gray-800/30 backdrop-blur-sm p-8 rounded-xl border border-gray-700">
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-gray-800 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center">Connexion</CardTitle>
+          <CardDescription className="text-center">
+            Connectez-vous pour accéder à votre compte
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
               <Input
+                id="email"
                 type="email"
-                placeholder="Email"
+                placeholder="exemple@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-gray-900/50 border-gray-700 text-white placeholder:text-gray-500"
                 required
               />
             </div>
-            <div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Mot de passe</Label>
               <Input
+                id="password"
                 type="password"
-                placeholder="Mot de passe"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-gray-900/50 border-gray-700 text-white placeholder:text-gray-500"
                 required
               />
             </div>
-            <Button
-              type="submit"
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <Button 
+              type="submit" 
+              className="w-full" 
               disabled={isLoading}
             >
-              {isLoading ? "Connexion..." : "Se connecter"}
+              {isLoading ? "Connexion en cours..." : "Se connecter"}
             </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-gray-400">
+            <p className="text-sm text-center text-muted-foreground">
               Pas encore de compte ?{" "}
-              <Link to="/signup" className="text-blue-500 hover:underline">
-                S'inscrire
+              <Link to="/signup" className="text-primary hover:underline">
+                Créer un compte
               </Link>
             </p>
-          </div>
-        </div>
-      </motion.div>
+          </CardFooter>
+        </form>
+      </Card>
     </div>
   );
 };
