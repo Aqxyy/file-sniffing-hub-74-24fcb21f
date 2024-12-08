@@ -1,7 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
-import NavButtons from "@/components/NavButtons";
-import PricingPlan from "@/components/pricing/PricingPlan";
 import { Button } from "@/components/ui/button";
+import PricingPlan from "@/components/pricing/PricingPlan";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -34,10 +33,10 @@ const Product = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 relative">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
       <Button 
         variant="ghost" 
-        className="absolute top-4 left-4 text-white"
+        className="fixed top-4 left-4 text-white z-50"
         onClick={() => navigate(-1)}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
@@ -78,7 +77,6 @@ const Product = () => {
               { text: "Support prioritaire" },
               { text: "Accès aux bases premium" }
             ]}
-            priceId="price_1QTZHvEeS2EtyeTMNWeSozYu"
             currentPlan={subscription?.plan_type === 'standard' && subscription.status === 'active'}
           />
           <PricingPlan 
@@ -94,7 +92,6 @@ const Product = () => {
               { text: "Exports illimités" },
               { text: "Personnalisation avancée" }
             ]}
-            priceId="price_1QTZHIEeS2EtyeTMIobx6y3O"
             currentPlan={subscription?.plan_type === 'pro' && subscription.status === 'active'}
           />
           <PricingPlan 
@@ -110,7 +107,6 @@ const Product = () => {
               { text: "Mises à jour gratuites" },
               { text: "Personnalisation avancée" }
             ]}
-            priceId="price_1QTZwZEeS2EtyeTMcYOFcClK"
             currentPlan={subscription?.plan_type === 'lifetime' && subscription.status === 'active' && subscription.api_access}
           />
         </div>
