@@ -3,19 +3,10 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 const Product = () => {
   const plans = [
-    {
-      name: "Gratuit",
-      price: "0€",
-      features: [
-        "10 recherches par jour",
-        "Résultats limités",
-        "Support basique",
-      ],
-      popular: false,
-    },
     {
       name: "Standard",
       price: "19€",
@@ -28,7 +19,7 @@ const Product = () => {
       ],
       buttonText: "S'abonner maintenant",
       popular: true,
-      priceId: "VOTRE_PRICE_ID_STANDARD"
+      priceId: "price_1QTZHIEeS2EtyeTMIobx6y3O"
     },
     {
       name: "Pro",
@@ -43,7 +34,7 @@ const Product = () => {
       ],
       buttonText: "Souscrire au plan Pro",
       popular: false,
-      priceId: "VOTRE_PRICE_ID_PRO"
+      priceId: "price_1QTZHvEeS2EtyeTMNWeSozYu"
     }
   ];
 
@@ -57,9 +48,11 @@ const Product = () => {
 
       if (response.error) throw response.error;
 
-      const { url } = response.data;
-      if (url) {
-        window.location.href = url;
+      const { data } = response;
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL received');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -95,7 +88,7 @@ const Product = () => {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {plans.map((plan, index) => (
             <motion.div
               key={index}
@@ -130,18 +123,16 @@ const Product = () => {
                 ))}
               </ul>
               
-              {plan.buttonText && (
-                <Button 
-                  onClick={() => handlePlanClick(plan.name, plan.priceId)}
-                  className={`w-full ${
-                    plan.popular 
-                      ? "bg-blue-500 hover:bg-blue-600" 
-                      : "bg-gray-700 hover:bg-gray-600"
-                  } text-white`}
-                >
-                  {plan.buttonText}
-                </Button>
-              )}
+              <Button 
+                onClick={() => handlePlanClick(plan.name, plan.priceId)}
+                className={`w-full ${
+                  plan.popular 
+                    ? "bg-blue-500 hover:bg-blue-600" 
+                    : "bg-gray-700 hover:bg-gray-600"
+                } text-white`}
+              >
+                {plan.buttonText}
+              </Button>
             </motion.div>
           ))}
         </div>
