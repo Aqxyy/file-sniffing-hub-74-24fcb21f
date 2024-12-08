@@ -67,7 +67,10 @@ const Admin = () => {
       
       const { data: subscriptions, error: subError } = await supabase
         .from('subscriptions')
-        .select('*, profiles:user_id(email)');
+        .select(`
+          *,
+          user:profiles!subscriptions_user_id_fkey(email)
+        `);
 
       if (subError) {
         console.error("Subscription fetch error:", subError);
@@ -78,7 +81,7 @@ const Admin = () => {
 
       const formattedUsers = subscriptions?.map(sub => ({
         id: sub.user_id,
-        email: sub.profiles?.email || 'Email non disponible',
+        email: sub.user?.email || 'Email non disponible',
         plan_type: sub.plan_type,
         status: sub.status,
         api_access: sub.api_access || false
