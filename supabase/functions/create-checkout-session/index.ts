@@ -30,7 +30,7 @@ serve(async (req) => {
       mode: 'subscription',
       success_url: `${req.headers.get('origin')}/success`,
       cancel_url: `${req.headers.get('origin')}/product`,
-      client_reference_id: userId, // Add the user ID here
+      client_reference_id: userId,
     })
 
     console.log('Checkout session created:', session.id)
