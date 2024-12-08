@@ -11,15 +11,14 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { priceId } = await req.json()
+    const { priceId, userId } = await req.json()
     
-    console.log('Creating checkout session for price:', priceId)
+    console.log('Creating checkout session for price:', priceId, 'and user:', userId)
 
     const session = await stripe.checkout.sessions.create({
       line_items: [
@@ -31,6 +30,7 @@ serve(async (req) => {
       mode: 'subscription',
       success_url: `${req.headers.get('origin')}/success`,
       cancel_url: `${req.headers.get('origin')}/product`,
+      client_reference_id: userId, // Add the user ID here
     })
 
     console.log('Checkout session created:', session.id)

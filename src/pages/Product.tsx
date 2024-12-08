@@ -1,150 +1,164 @@
-import { ArrowLeft, Check } from "lucide-react";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
 
 const Product = () => {
-  const plans = [
-    {
-      name: "Standard",
-      price: "19€",
-      period: "/mois",
-      features: [
-        "Recherches illimitées",
-        "Accès complet aux résultats",
-        "Support prioritaire",
-        "Accès aux bases premium",
-      ],
-      buttonText: "S'abonner maintenant",
-      popular: true,
-      priceId: "price_1QTZHIEeS2EtyeTMIobx6y3O"
-    },
-    {
-      name: "Pro",
-      price: "49€",
-      period: "/mois",
-      features: [
-        "Tout le plan Standard",
-        "API Access",
-        "Support dédié 24/7",
-        "Exports illimités",
-        "Personnalisation avancée"
-      ],
-      buttonText: "Souscrire au plan Pro",
-      popular: false,
-      priceId: "price_1QTZHvEeS2EtyeTMNWeSozYu"
-    }
-  ];
+  const { user } = useAuth();
 
-  const handlePlanClick = async (plan: string, priceId?: string) => {
-    if (!priceId) return;
-    
+  const handleSubscribe = async (priceId: string) => {
     try {
-      const response = await supabase.functions.invoke('create-checkout-session', {
-        body: { priceId }
-      });
+      const response = await fetch(
+        "https://dihvcgtshzhuwnfxhfnu.supabase.co/functions/v1/create-checkout-session",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            priceId,
+            userId: user?.id,
+          }),
+        }
+      );
 
-      if (response.error) throw response.error;
-
-      const { data } = response;
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No checkout URL received');
+      if (!response.ok) {
+        throw new Error("Error creating checkout session");
       }
+
+      const { url } = await response.json();
+      window.location.href = url;
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
       toast.error("Une erreur est survenue lors de la redirection vers le paiement");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
-      <div className="container mx-auto px-4 py-16">
-        <div className="absolute top-4 left-4">
-          <Link to="/">
-            <Button 
-              variant="default"
-              className="bg-blue-900 hover:bg-blue-800 text-white flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Retour à la recherche
-            </Button>
-          </Link>
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-16"
-        >
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-            Choisissez votre plan
-          </h1>
-          <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto">
-            Accédez à la plus grande base de données de recherche avec des fonctionnalités avancées et un support premium
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 py-12 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-white sm:text-4xl">Nos offres</h2>
+          <p className="mt-4 text-lg text-gray-400">
+            Choisissez l'offre qui correspond le mieux à vos besoins
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {plans.map((plan, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + index * 0.1 }}
-              className={`relative bg-gray-800/30 backdrop-blur-sm p-8 rounded-xl border-2 ${
-                plan.popular ? "border-blue-500" : "border-gray-700"
-              }`}
+          {/* Standard Plan */}
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700">
+            <h3 className="text-2xl font-semibold text-white mb-4">Standard</h3>
+            <p className="text-4xl font-bold text-white mb-6">
+              19€ <span className="text-lg font-normal text-gray-400">/mois</span>
+            </p>
+            <ul className="space-y-4 mb-8">
+              <li className="flex items-center text-gray-300">
+                <svg
+                  className="w-5 h-5 text-green-500 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Fonctionnalité standard 1
+              </li>
+              <li className="flex items-center text-gray-300">
+                <svg
+                  className="w-5 h-5 text-green-500 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Fonctionnalité standard 2
+              </li>
+            </ul>
+            <Button
+              onClick={() => handleSubscribe("price_1QTZHIEeS2EtyeTMIobx6y3O")}
+              className="w-full bg-blue-500 hover:bg-blue-600"
             >
-              {plan.popular && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                  Plus populaire
-                </span>
-              )}
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
-                <div className="flex items-baseline justify-center mb-4">
-                  <span className="text-4xl font-bold text-white">{plan.price}</span>
-                  {plan.period && (
-                    <span className="text-gray-400 ml-1">{plan.period}</span>
-                  )}
-                </div>
-              </div>
-              
-              <ul className="space-y-4 mb-8">
-                {plan.features.map((feature, featureIndex) => (
-                  <li key={featureIndex} className="flex items-start text-gray-300">
-                    <Check className="w-5 h-5 text-blue-500 mr-2 flex-shrink-0 mt-0.5" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              
-              <Button 
-                onClick={() => handlePlanClick(plan.name, plan.priceId)}
-                className={`w-full ${
-                  plan.popular 
-                    ? "bg-blue-500 hover:bg-blue-600" 
-                    : "bg-gray-700 hover:bg-gray-600"
-                } text-white`}
-              >
-                {plan.buttonText}
-              </Button>
-            </motion.div>
-          ))}
-        </div>
+              Commencer
+            </Button>
+          </div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="text-center mt-16 text-gray-400"
-        >
-          <p>Besoin d'une solution personnalisée ? <button onClick={() => toast.info("Cette fonctionnalité sera bientôt disponible")} className="text-blue-500 hover:underline">Contactez-nous</button></p>
-        </motion.div>
+          {/* Pro Plan */}
+          <div className="bg-blue-600/10 backdrop-blur-sm rounded-2xl p-8 border border-blue-500/20 relative overflow-hidden">
+            <div className="absolute top-3 right-3 bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+              Populaire
+            </div>
+            <h3 className="text-2xl font-semibold text-white mb-4">Pro</h3>
+            <p className="text-4xl font-bold text-white mb-6">
+              49€ <span className="text-lg font-normal text-gray-400">/mois</span>
+            </p>
+            <ul className="space-y-4 mb-8">
+              <li className="flex items-center text-gray-300">
+                <svg
+                  className="w-5 h-5 text-green-500 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Toutes les fonctionnalités Standard
+              </li>
+              <li className="flex items-center text-gray-300">
+                <svg
+                  className="w-5 h-5 text-green-500 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Fonctionnalité pro exclusive
+              </li>
+              <li className="flex items-center text-gray-300">
+                <svg
+                  className="w-5 h-5 text-green-500 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Support prioritaire
+              </li>
+            </ul>
+            <Button
+              onClick={() => handleSubscribe("price_1QTZHvEeS2EtyeTMNWeSozYu")}
+              className="w-full bg-blue-500 hover:bg-blue-600"
+            >
+              Commencer
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
