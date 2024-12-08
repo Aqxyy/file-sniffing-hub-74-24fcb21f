@@ -119,9 +119,9 @@ const PricingPlan = ({
           clientId: "AQSK9-m4vRwgDgQwhSipOw56fmMZJPSTWdBeUllYIFIqVSVLUDec_aGnaqnOC-6bKpYRaS68DPaZGnts",
           currency: "EUR" 
         }}>
-          <div className={`w-full ${getButtonClass()} rounded-md text-white font-medium`}>
+          <div className="w-full">
             <Button 
-              className="w-full"
+              className={`w-full ${getButtonClass()}`}
               onClick={() => {
                 const paypalButtons = document.querySelector('[data-paypal-button="true"]');
                 if (paypalButtons) {
