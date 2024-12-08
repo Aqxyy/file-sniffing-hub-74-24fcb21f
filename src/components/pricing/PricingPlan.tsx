@@ -115,43 +115,33 @@ const PricingPlan = ({
         ))}
       </ul>
       {buttonText && name !== "Gratuit" && (
-        <div>
-          <Button 
-            className={`w-full mb-4 ${getButtonClass()}`}
-            onClick={() => document.getElementById(`paypal-button-${name}`)?.click()}
-          >
-            {buttonText}
-          </Button>
-          <div className="hidden">
-            <PayPalScriptProvider options={{ 
-              clientId: "AZDxjDScFpQtjWTOUtWKbyN_bDt4OgqaF4eYXlewfBP4-8aqX3PiV8e1GWU6liB2CUXlkA59kJXE7M6R",
-              currency: "EUR" 
-            }}>
-              <PayPalButtons
-                style={{ layout: "horizontal" }}
-                createOrder={(data, actions) => {
-                  return actions.order.create({
-                    intent: "CAPTURE",
-                    purchase_units: [
-                      {
-                        amount: {
-                          value: priceNumber.toString(),
-                          currency_code: "EUR"
-                        },
-                        description: `Abonnement ${name}`
-                      }
-                    ]
-                  });
-                }}
-                onApprove={handlePaypalApprove}
-                onError={(err) => {
-                  console.error("PayPal Error:", err);
-                  toast.error("Une erreur est survenue avec PayPal");
-                }}
-              />
-            </PayPalScriptProvider>
-          </div>
-        </div>
+        <PayPalScriptProvider options={{ 
+          clientId: "AZDxjDScFpQtjWTOUtWKbyN_bDt4OgqaF4eYXlewfBP4-8aqX3PiV8e1GWU6liB2CUXlkA59kJXE7M6R",
+          currency: "EUR" 
+        }}>
+          <PayPalButtons
+            style={{ layout: "horizontal" }}
+            createOrder={(data, actions) => {
+              return actions.order.create({
+                intent: "CAPTURE",
+                purchase_units: [
+                  {
+                    amount: {
+                      value: priceNumber.toString(),
+                      currency_code: "EUR"
+                    },
+                    description: `Abonnement ${name}`
+                  }
+                ]
+              });
+            }}
+            onApprove={handlePaypalApprove}
+            onError={(err) => {
+              console.error("PayPal Error:", err);
+              toast.error("Une erreur est survenue avec PayPal");
+            }}
+          />
+        </PayPalScriptProvider>
       )}
     </div>
   );
