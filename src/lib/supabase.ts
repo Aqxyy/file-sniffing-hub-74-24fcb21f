@@ -15,13 +15,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
     url: supabaseUrl ? 'défini' : 'manquant',
     key: supabaseAnonKey ? 'défini' : 'manquant'
   });
-  
-  // Rediriger vers la page de connexion si l'utilisateur n'est pas sur la page de login ou signup
-  const currentPath = window.location.pathname;
-  if (currentPath !== '/login' && currentPath !== '/signup') {
-    window.location.href = '/login';
-  }
-  
+
+  // Au lieu de rediriger, on lance simplement l'erreur
   throw new Error(
     'Variables d\'environnement Supabase manquantes. Veuillez vérifier que :\n' +
     '1. L\'intégration Supabase est activée dans Lovable\n' +
