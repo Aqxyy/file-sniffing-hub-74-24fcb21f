@@ -65,15 +65,9 @@ const Admin = () => {
     try {
       console.log("Fetching users...");
       
-      // Updated query to use auth.users table
       const { data: subscriptions, error: subError } = await supabase
         .from('subscriptions')
-        .select(`
-          *,
-          auth_users:user_id (
-            email
-          )
-        `);
+        .select('*, user:user_id(email)');
 
       if (subError) {
         console.error("Subscription fetch error:", subError);
@@ -84,7 +78,7 @@ const Admin = () => {
 
       const formattedUsers = subscriptions?.map(sub => ({
         id: sub.user_id,
-        email: sub.auth_users?.email || 'Email non disponible',
+        email: sub.user?.email || 'Email non disponible',
         plan_type: sub.plan_type,
         status: sub.status,
         api_access: sub.api_access || false
