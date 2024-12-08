@@ -1,96 +1,91 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { MessageSquare } from "lucide-react";
+import { Database } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
-export default function Login() {
-  const navigate = useNavigate();
-  const { signIn } = useAuth();
+const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
+    setIsLoading(true);
     try {
-      const { error } = await signIn(email, password);
-      if (error) throw error;
-      navigate("/");
+      await signIn(email, password);
+      toast.success("Connexion réussie");
     } catch (error: any) {
-      toast.error(error.message);
+      console.error("Login error:", error);
+      toast.error(error.message || "Erreur lors de la connexion");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-6 lg:h-[60px]">
-        <div className="flex flex-1 items-center gap-2">
-          <Link className="font-semibold" to="/">
-            File Sniffing Hub
-          </Link>
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md"
+      >
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <Database className="w-12 h-12 text-blue-500" />
+            <h1 className="text-4xl font-bold text-white">ZeenBase</h1>
+          </div>
+          <h2 className="text-2xl font-semibold text-white mb-2">Connexion</h2>
+          <p className="text-gray-400">Accédez à votre compte ZeenBase</p>
         </div>
-        <div className="flex items-center gap-4">
-          <Link to="/product">
-            <Button variant="ghost">Product</Button>
-          </Link>
-          <Link to="/help">
-            <Button variant="ghost">
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Support
-            </Button>
-          </Link>
-        </div>
-      </header>
-      <main className="flex-1">
-        <div className="container flex items-center justify-center min-h-[calc(100vh-60px)]">
-          <div className="w-full max-w-[350px] space-y-6">
-            <div className="space-y-2 text-center">
-              <h1 className="text-3xl font-bold">Connexion</h1>
-              <p className="text-gray-500 dark:text-gray-400">
-                Entrez vos identifiants pour vous connecter
-              </p>
+
+        <div className="bg-gray-800/30 backdrop-blur-sm p-8 rounded-xl border border-gray-700">
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <Input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-gray-900/50 border-gray-700 text-white placeholder:text-gray-500"
+                required
+              />
             </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Input
-                  id="email"
-                  placeholder="Email"
-                  required
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Input
-                  id="password"
-                  placeholder="Mot de passe"
-                  required
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              <Button className="w-full" type="submit" disabled={loading}>
-                {loading ? "Connexion..." : "Se connecter"}
-              </Button>
-            </form>
-            <div className="text-center text-sm">
+            <div>
+              <Input
+                type="password"
+                placeholder="Mot de passe"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-gray-900/50 border-gray-700 text-white placeholder:text-gray-500"
+                required
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+              disabled={isLoading}
+            >
+              {isLoading ? "Connexion..." : "Se connecter"}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-gray-400">
               Pas encore de compte ?{" "}
-              <Link className="underline" to="/signup">
+              <Link to="/signup" className="text-blue-500 hover:underline">
                 S'inscrire
               </Link>
-            </div>
+            </p>
           </div>
         </div>
-      </main>
+      </motion.div>
     </div>
   );
-}
+};
+
+export default Login;
