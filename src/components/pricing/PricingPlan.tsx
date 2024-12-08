@@ -6,22 +6,26 @@ interface PricingFeature {
 }
 
 interface PricingPlanProps {
-  name: string;
-  price: string;
-  period: string;
-  features: PricingFeature[];
-  onSubscribe: () => void;
+  name?: string;
+  price?: string;
+  period?: string;
+  features?: PricingFeature[];
+  onSubscribe?: () => void;
   buttonText?: string;
   variant?: "default" | "popular" | "lifetime";
   className?: string;
 }
 
 const PricingPlan = ({
-  name,
-  price,
-  period,
-  features,
-  onSubscribe,
+  name = "Plan Standard",
+  price = "29.99",
+  period = "/mois",
+  features = [
+    { text: "Fonctionnalité 1" },
+    { text: "Fonctionnalité 2" },
+    { text: "Fonctionnalité 3" }
+  ],
+  onSubscribe = () => console.log("Abonnement"),
   buttonText = "Commencer",
   variant = "default",
   className = "",
