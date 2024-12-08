@@ -10,6 +10,9 @@ console.log('Vérification des variables Supabase:', {
   VITE_SUPABASE_ANON_KEY: supabaseAnonKey ? 'présent' : 'manquant'
 });
 
+// Création d'une instance par défaut pour éviter les erreurs de typage
+let supabase = null;
+
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Variables d\'environnement Supabase manquantes:', {
     url: supabaseUrl ? 'défini' : 'manquant',
@@ -20,9 +23,15 @@ if (!supabaseUrl || !supabaseAnonKey) {
   const currentPath = window.location.pathname;
   if (currentPath !== '/login' && currentPath !== '/signup') {
     window.location.href = '/login';
-    // On ne lance pas d'erreur si on redirige
-  } else {
-    // On lance l'erreur uniquement si on est déjà sur login/signup
+  }
+} else {
+  // On crée le client Supabase uniquement si les variables sont présentes
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
+}
+
+// Export d'une fonction qui vérifie si Supabase est initialisé
+export const getSupabase = () => {
+  if (!supabase) {
     throw new Error(
       'Variables d\'environnement Supabase manquantes. Veuillez vérifier que :\n' +
       '1. L\'intégration Supabase est activée dans Lovable\n' +
@@ -30,6 +39,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
       '3. Les variables d\'environnement sont bien injectées'
     );
   }
-}
+  return supabase;
+};
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Export de l'instance pour la rétrocompatibilité
+export { supabase };
