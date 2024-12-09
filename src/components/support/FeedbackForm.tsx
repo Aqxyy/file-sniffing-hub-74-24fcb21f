@@ -5,6 +5,7 @@ import { Star } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const FeedbackForm = () => {
   const [rating, setRating] = useState(0);
@@ -12,13 +13,31 @@ const FeedbackForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmittedFeedback, setHasSubmittedFeedback] = useState(false);
   const [isTableAvailable, setIsTableAvailable] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
   useEffect(() => {
-    const checkExistingFeedback = async () => {
+    const checkTableAndFeedback = async () => {
       if (!user) return;
       
       try {
+        // First, check if the table exists by attempting a simple query
+        const { error: tableCheckError } = await supabase
+          .from('feedback')
+          .select('count')
+          .limit(1)
+          .single();
+
+        if (tableCheckError) {
+          console.log("Table check error:", tableCheckError);
+          if (tableCheckError.code === '42P01') { // Table doesn't exist error
+            setIsTableAvailable(false);
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // If we get here, table exists, now check for user's feedback
         const { data, error } = await supabase
           .from('feedback')
           .select('id')
@@ -26,24 +45,20 @@ const FeedbackForm = () => {
           .single();
 
         if (error) {
-          if (error.code === '42P01') { // Table doesn't exist error
-            console.log("Feedback table not found:", error);
-            setIsTableAvailable(false);
-            return;
-          }
           if (error.code !== 'PGRST116') { // Not found error is ok
             console.error("Error checking feedback:", error);
-            return;
           }
         }
 
         setHasSubmittedFeedback(!!data);
       } catch (error) {
-        console.error("Error checking feedback:", error);
+        console.error("Error in checkTableAndFeedback:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    checkExistingFeedback();
+    checkTableAndFeedback();
   }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -96,21 +111,33 @@ const FeedbackForm = () => {
     }
   };
 
-  if (!isTableAvailable) {
+  if (isLoading) {
     return (
       <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 max-w-2xl mx-auto">
-        <h2 className="text-2xl font-semibold text-white mb-4">Système de feedback temporairement indisponible</h2>
-        <p className="text-gray-300">Le système de feedback est en cours de maintenance. Veuillez réessayer plus tard.</p>
+        <p className="text-white text-center">Chargement...</p>
       </div>
+    );
+  }
+
+  if (!isTableAvailable) {
+    return (
+      <Alert variant="destructive" className="max-w-2xl mx-auto">
+        <AlertTitle>Système de feedback temporairement indisponible</AlertTitle>
+        <AlertDescription>
+          Le système de feedback est en cours de maintenance. Veuillez réessayer plus tard.
+        </AlertDescription>
+      </Alert>
     );
   }
 
   if (hasSubmittedFeedback) {
     return (
-      <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 max-w-2xl mx-auto">
-        <h2 className="text-2xl font-semibold text-white mb-4">Merci pour votre feedback !</h2>
-        <p className="text-gray-300">Vous avez déjà soumis votre avis. Nous vous remercions de votre participation.</p>
-      </div>
+      <Alert className="max-w-2xl mx-auto bg-green-500/10 text-green-500 border-green-500/20">
+        <AlertTitle>Merci pour votre feedback !</AlertTitle>
+        <AlertDescription>
+          Vous avez déjà soumis votre avis. Nous vous remercions de votre participation.
+        </AlertDescription>
+      </Alert>
     );
   }
 
