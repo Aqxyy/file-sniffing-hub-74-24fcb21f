@@ -55,7 +55,7 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
   };
 
   const paypalConfig = {
-    "client-id": "VOTRE_CLIENT_ID_PRODUCTION", // Remplacez par votre vrai Client ID de production PayPal
+    clientId: "AXuq55uc2YiEE5HwmMb1_5Vut8B5LfY--ATelE2N0WJwEmAY5mWYDfq33j5ARxETotyYbKWfyxonI2DB",
     currency: "EUR",
     intent: "capture",
     components: "buttons",
