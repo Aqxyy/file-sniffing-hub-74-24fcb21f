@@ -55,7 +55,7 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
   };
 
   const paypalConfig = {
-    clientId: "AQjXxGXDPEtOPGxlxRXDxFPPYHPQWBBPZGYHPEtOPGxlxRXDxFPPYHPQWBBPZGYH", // Remplacez par votre Client ID de production
+    "client-id": "VOTRE_CLIENT_ID_PRODUCTION", // Remplacez par votre vrai Client ID de production PayPal
     currency: "EUR",
     intent: "capture",
     components: "buttons",
@@ -118,7 +118,7 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
 
       <Button 
         variant="secondary"
-        className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900"
+        className="w-full bg-gray-700 hover:bg-gray-600 text-white"
         onClick={onCancel}
         disabled={isProcessing}
       >
