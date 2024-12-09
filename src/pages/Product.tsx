@@ -117,7 +117,15 @@ const Product = () => {
         </div>
 
         <div className="text-center mt-12 text-gray-400">
-          Besoin d'une solution personnalisée ? <a href="#" className="text-blue-400 hover:text-blue-300">Contactez-nous</a>
+          Besoin d'une solution personnalisée ?{" "}
+          <a 
+            href="https://discord.gg/your-discord-link" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-blue-400 hover:text-blue-300"
+          >
+            Contactez-nous sur Discord
+          </a>
         </div>
       </div>
     </div>
