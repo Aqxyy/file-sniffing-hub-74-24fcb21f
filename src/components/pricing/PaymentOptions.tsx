@@ -3,6 +3,7 @@ import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useState, useEffect } from "react";
+import { CreditCard } from "lucide-react";
 
 interface PaymentOptionsProps {
   priceNumber: number;
@@ -16,7 +17,6 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
   const [scriptError, setScriptError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Reset error state when component mounts
     setScriptError(null);
     setScriptLoaded(false);
   }, []);
@@ -55,6 +55,10 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
     }
   };
 
+  const handleCardPayment = () => {
+    toast.info("Le paiement par carte bancaire sera bientôt disponible");
+  };
+
   return (
     <div className="w-full space-y-4">
       <PayPalScriptProvider 
@@ -67,7 +71,7 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
           "disable-funding": "credit"
         }}
       >
-        <div className="min-h-[150px] relative">
+        <div className="relative">
           {scriptError ? (
             <div className="text-red-500 text-center p-4">
               Une erreur est survenue lors du chargement de PayPal. Veuillez réessayer.
@@ -79,7 +83,7 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
                 layout: "horizontal",
                 shape: "rect",
                 color: "gold",
-                height: 55
+                height: 45
               }}
               disabled={isProcessing}
               onInit={() => {
@@ -117,21 +121,26 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
               }}
             />
           )}
-          {!scriptLoaded && !scriptError && (
-            <div className="text-center p-4">
-              Chargement de PayPal...
-            </div>
-          )}
         </div>
-        <Button 
-          variant="outline"
-          className="w-full mt-4"
-          onClick={onCancel}
-          disabled={isProcessing}
-        >
-          Retour
-        </Button>
       </PayPalScriptProvider>
+
+      <Button 
+        variant="outline"
+        className="w-full flex items-center justify-center gap-2"
+        onClick={handleCardPayment}
+      >
+        <CreditCard className="h-4 w-4" />
+        Payer par carte bancaire
+      </Button>
+
+      <Button 
+        variant="ghost"
+        className="w-full"
+        onClick={onCancel}
+        disabled={isProcessing}
+      >
+        Retour
+      </Button>
     </div>
   );
 };
