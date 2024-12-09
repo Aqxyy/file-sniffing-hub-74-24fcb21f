@@ -42,12 +42,10 @@ const FeedbackForm = () => {
           .from('feedback')
           .select('id')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle(); // Use maybeSingle instead of single to handle no rows case
 
-        if (error) {
-          if (error.code !== 'PGRST116') { // Not found error is ok
-            console.error("Error checking feedback:", error);
-          }
+        if (error && error.code !== 'PGRST116') { // Ignore no rows found error
+          console.error("Error checking feedback:", error);
         }
 
         setHasSubmittedFeedback(!!data);
