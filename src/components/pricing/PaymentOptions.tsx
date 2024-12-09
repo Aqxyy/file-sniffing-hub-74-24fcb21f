@@ -61,12 +61,12 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
     components: "buttons",
     "enable-funding": "paylater",
     "disable-funding": "credit,card",
-    "data-client-token": "access_token$sandbox$cj49vd4m8h8f7vj8$a2d2c2f3d6f0e5a1f3c4d5e6f7g8h9i0"
+    env: "production" // Changed from sandbox to production
   };
 
   return (
     <div className="w-full space-y-4">
-      <PayPalScriptProvider options={{ ...paypalConfig, 'data-namespace': 'PayPalSDK' }}>
+      <PayPalScriptProvider options={paypalConfig}>
         <div className="relative space-y-4">
           {scriptError ? (
             <div className="text-red-500 text-center p-4">
