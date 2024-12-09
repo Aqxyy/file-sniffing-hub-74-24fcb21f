@@ -5,10 +5,13 @@ import PricingFeatures from "@/components/pricing/PricingFeatures";
 import PaymentOptions from "@/components/pricing/PaymentOptions";
 import NavButtons from "@/components/NavButtons";
 import AdminButton from "@/components/AdminButton";
+import { useState } from "react";
 
 const DISCORD_INVITE_URL = "https://discord.com/invite/UfnBUHXbDV";
 
 const Product = () => {
+  const [isProcessing, setIsProcessing] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 p-8">
       <NavButtons />
@@ -34,30 +37,46 @@ const Product = () => {
 
         <div className="grid md:grid-cols-2 gap-8 mb-12">
           <PricingPlan
-            title="Standard"
-            price="19.99€"
-            description="Pour les petites équipes"
+            name="Standard"
+            price="19.99"
+            period="/mois"
             features={[
-              "Accès à l'API",
-              "Support par email",
-              "Mises à jour régulières",
+              { text: "Accès à l'API" },
+              { text: "Support par email" },
+              { text: "Mises à jour régulières" }
             ]}
+            buttonText="S'abonner"
           />
           <PricingPlan
-            title="Premium"
-            price="49.99€"
-            description="Pour les équipes professionnelles"
+            name="Premium"
+            price="49.99"
+            period="/mois"
             features={[
-              "Accès illimité à l'API",
-              "Support prioritaire",
-              "Fonctionnalités avancées",
-              "Statistiques détaillées",
+              { text: "Accès illimité à l'API" },
+              { text: "Support prioritaire" },
+              { text: "Fonctionnalités avancées" },
+              { text: "Statistiques détaillées" }
             ]}
+            buttonText="S'abonner"
+            variant="popular"
           />
         </div>
 
-        <PricingFeatures />
-        <PaymentOptions />
+        <div className="space-y-8">
+          <PricingFeatures 
+            features={[
+              { text: "Accès complet à toutes les fonctionnalités" },
+              { text: "Support premium 24/7" },
+              { text: "Mises à jour prioritaires" }
+            ]} 
+          />
+          <PaymentOptions 
+            priceNumber={49.99}
+            planName="Premium"
+            onCancel={() => {}}
+            isProcessing={isProcessing}
+          />
+        </div>
       </div>
     </div>
   );

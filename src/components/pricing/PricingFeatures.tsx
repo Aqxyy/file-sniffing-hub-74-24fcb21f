@@ -9,6 +9,10 @@ interface PricingFeaturesProps {
 }
 
 const PricingFeatures = ({ features }: PricingFeaturesProps) => {
+  if (!features || features.length === 0) {
+    return null;
+  }
+
   return (
     <ul className="space-y-4 mb-8">
       {features.map((feature, index) => (
