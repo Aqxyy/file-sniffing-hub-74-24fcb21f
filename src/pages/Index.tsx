@@ -10,6 +10,7 @@ import AdminButton from "@/components/AdminButton";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import MaintenanceScreen from "@/components/MaintenanceScreen";
+import DOMPurify from 'dompurify';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -40,7 +41,8 @@ const Index = () => {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchQuery.trim()) {
+    const sanitizedQuery = DOMPurify.sanitize(searchQuery.trim());
+    if (!sanitizedQuery) {
       toast({
         title: "Erreur",
         description: "Veuillez entrer un mot-clé",
@@ -55,8 +57,10 @@ const Index = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-CSRF-Token": document.cookie.match(/csrf-token=([^;]+)/)?.[1] || "",
         },
-        body: JSON.stringify({ keyword: searchQuery }),
+        credentials: 'include',
+        body: JSON.stringify({ keyword: sanitizedQuery }),
       });
 
       if (!response.ok) {
@@ -109,7 +113,7 @@ const Index = () => {
               placeholder="Entrez votre mot-clé..."
               className="w-full h-14 pl-12 pr-4 rounded-xl bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-400 focus:ring-primary focus:border-primary"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => setSearchQuery(DOMPurify.sanitize(e.target.value))}
             />
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Button

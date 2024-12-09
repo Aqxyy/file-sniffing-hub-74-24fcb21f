@@ -3,6 +3,7 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import DOMPurify from 'dompurify';
 
 interface AuthContextType {
   user: User | null;
@@ -56,8 +57,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     console.log("AuthProvider: Attempting sign in", email);
+    const sanitizedEmail = DOMPurify.sanitize(email.toLowerCase().trim());
     const { error, data } = await supabase.auth.signInWithPassword({ 
-      email: email.toLowerCase().trim(), 
+      email: sanitizedEmail, 
       password 
     });
     
@@ -76,8 +78,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     console.log("AuthProvider: Attempting sign up", email);
+    const sanitizedEmail = DOMPurify.sanitize(email.toLowerCase().trim());
     const { error, data } = await supabase.auth.signUp({
-      email: email.toLowerCase().trim(),
+      email: sanitizedEmail,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
