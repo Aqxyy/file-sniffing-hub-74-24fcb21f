@@ -6,10 +6,32 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import MaintenanceScreen from "@/components/MaintenanceScreen";
 
 const Product = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Fetch maintenance mode status
+  const { data: siteSettings } = useQuery({
+    queryKey: ['site_settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('maintenance_mode')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+        
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Show maintenance screen if maintenance mode is enabled
+  if (siteSettings?.maintenance_mode) {
+    return <MaintenanceScreen />;
+  }
 
   // Fetch current subscription status
   const { data: subscription } = useQuery({
@@ -51,6 +73,16 @@ const Product = () => {
           <p className="text-gray-300 text-lg">
             Accédez à la plus grande base de données de recherche avec des fonctionnalités avancées et un support premium
           </p>
+          <div className="mt-4">
+            <a 
+              href="https://discord.com/invite/UfnBUHXbDV"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300"
+            >
+              Contactez nous
+            </a>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-7xl mx-auto">
@@ -119,12 +151,12 @@ const Product = () => {
         <div className="text-center mt-12 text-gray-400">
           Besoin d'une solution personnalisée ?{" "}
           <a 
-            href="https://discord.gg/zeenbase" 
+            href="https://discord.com/invite/UfnBUHXbDV" 
             target="_blank" 
             rel="noopener noreferrer" 
             className="text-blue-400 hover:text-blue-300"
           >
-            Contactez-nous sur Discord
+            Contactez nous
           </a>
         </div>
       </div>

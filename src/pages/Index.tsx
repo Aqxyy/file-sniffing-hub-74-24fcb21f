@@ -7,12 +7,36 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import NavButtons from "@/components/NavButtons";
 import AdminButton from "@/components/AdminButton";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import MaintenanceScreen from "@/components/MaintenanceScreen";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState<any[]>([]);
   const { toast } = useToast();
+
+  // Fetch maintenance mode status
+  const { data: siteSettings } = useQuery({
+    queryKey: ['site_settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('maintenance_mode')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+        
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Show maintenance screen if maintenance mode is enabled
+  if (siteSettings?.maintenance_mode) {
+    return <MaintenanceScreen />;
+  }
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
