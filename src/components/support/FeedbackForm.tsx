@@ -11,6 +11,7 @@ const FeedbackForm = () => {
   const [feedback, setFeedback] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmittedFeedback, setHasSubmittedFeedback] = useState(false);
+  const [isTableAvailable, setIsTableAvailable] = useState(true);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -24,9 +25,16 @@ const FeedbackForm = () => {
           .eq('user_id', user.id)
           .single();
 
-        if (error && error.code !== 'PGRST116') {
-          console.error("Error checking feedback:", error);
-          return;
+        if (error) {
+          if (error.code === '42P01') { // Table doesn't exist error
+            console.log("Feedback table not found:", error);
+            setIsTableAvailable(false);
+            return;
+          }
+          if (error.code !== 'PGRST116') { // Not found error is ok
+            console.error("Error checking feedback:", error);
+            return;
+          }
         }
 
         setHasSubmittedFeedback(!!data);
@@ -52,7 +60,6 @@ const FeedbackForm = () => {
 
     setIsSubmitting(true);
     try {
-      console.log("Attempting to submit feedback...");
       const { error } = await supabase
         .from('feedback')
         .insert([
@@ -65,11 +72,12 @@ const FeedbackForm = () => {
 
       if (error) {
         console.error("Supabase error:", error);
-        if (error.code === '23505') { // Unique violation
+        if (error.code === '42P01') {
+          setIsTableAvailable(false);
+          toast.error("Le système de feedback n'est pas encore disponible");
+        } else if (error.code === '23505') { // Unique violation
           toast.error("Vous avez déjà soumis un feedback");
           setHasSubmittedFeedback(true);
-        } else if (error.code === "404" || error.message.includes("404")) {
-          toast.error("Le système de feedback n'est pas encore disponible. Veuillez réessayer plus tard.");
         } else {
           toast.error("Une erreur est survenue lors de l'envoi du feedback");
         }
@@ -87,6 +95,15 @@ const FeedbackForm = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (!isTableAvailable) {
+    return (
+      <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 max-w-2xl mx-auto">
+        <h2 className="text-2xl font-semibold text-white mb-4">Système de feedback temporairement indisponible</h2>
+        <p className="text-gray-300">Le système de feedback est en cours de maintenance. Veuillez réessayer plus tard.</p>
+      </div>
+    );
+  }
 
   if (hasSubmittedFeedback) {
     return (
