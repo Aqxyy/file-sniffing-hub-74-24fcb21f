@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Search, FileText, Loader2, Database, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -7,52 +7,46 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import NavButtons from "@/components/NavButtons";
 import AdminButton from "@/components/AdminButton";
-import MaintenanceScreen from "@/components/MaintenanceScreen";
 import { supabase } from "@/lib/supabase";
+import MaintenanceScreen from "@/components/MaintenanceScreen";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState<any[]>([]);
-  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const { toast } = useToast();
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchMaintenanceStatus = async () => {
-      const { data, error } = await supabase
-        .from('site_settings')
-        .select('maintenance_mode')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase
+          .from('site_settings')
+          .select('maintenance_mode')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      if (!error && data) {
-        setIsMaintenanceMode(data.maintenance_mode);
+        if (error) throw error;
+        setMaintenanceMode(data?.maintenance_mode || false);
+      } catch (error) {
+        console.error('Error fetching maintenance status:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchMaintenanceStatus();
-
-    // Subscribe to changes in site_settings
-    const channel = supabase
-      .channel('site_settings_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'site_settings',
-        },
-        (payload) => {
-          setIsMaintenanceMode(payload.new.maintenance_mode);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
   }, []);
+
+  if (isLoading) {
+    return <MaintenanceScreen />;
+  }
+
+  if (maintenanceMode) {
+    return <MaintenanceScreen />;
+  }
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,10 +85,6 @@ const Index = () => {
       setIsSearching(false);
     }
   };
-
-  if (isMaintenanceMode) {
-    return <MaintenanceScreen />;
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
