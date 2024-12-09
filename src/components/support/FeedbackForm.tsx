@@ -21,6 +21,7 @@ const FeedbackForm = () => {
 
     setIsSubmitting(true);
     try {
+      console.log("Attempting to submit feedback...");
       const { error } = await supabase
         .from('feedback')
         .insert([
@@ -31,14 +32,22 @@ const FeedbackForm = () => {
           }
         ]);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        if (error.code === "404" || error.message.includes("404")) {
+          toast.error("Le système de feedback n'est pas encore disponible. Veuillez réessayer plus tard.");
+        } else {
+          toast.error("Une erreur est survenue lors de l'envoi du feedback");
+        }
+        return;
+      }
 
       toast.success("Merci pour votre feedback !");
       setRating(0);
       setFeedback("");
     } catch (error) {
+      console.error("Submission error:", error);
       toast.error("Une erreur est survenue lors de l'envoi du feedback");
-      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
