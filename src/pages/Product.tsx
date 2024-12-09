@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
-import { PricingPlan } from "@/components/pricing/PricingPlan";
-import { PricingFeatures } from "@/components/pricing/PricingFeatures";
-import { PaymentOptions } from "@/components/pricing/PaymentOptions";
+import PricingPlan from "@/components/pricing/PricingPlan";
+import PricingFeatures from "@/components/pricing/PricingFeatures";
+import PaymentOptions from "@/components/pricing/PaymentOptions";
 import NavButtons from "@/components/NavButtons";
 import AdminButton from "@/components/AdminButton";
 
