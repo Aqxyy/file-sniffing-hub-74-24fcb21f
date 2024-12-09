@@ -54,8 +54,8 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
     }
   };
 
-  const paypalConfig = {
-    clientId: "AXuq55uc2YiEE5HwmMb1_5Vut8B5LfY--ATelE2N0WJwEmAY5mWYDfq33j5ARxETotyYbKWfyxonI2DB",
+  const initialOptions = {
+    "client-id": "AXuq55uc2YiEE5HwmMb1_5Vut8B5LfY--ATelE2N0WJwEmAY5mWYDfq33j5ARxETotyYbKWfyxonI2DB",
     currency: "EUR",
     intent: "capture",
     components: "buttons",
@@ -65,7 +65,7 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
 
   return (
     <div className="w-full space-y-4">
-      <PayPalScriptProvider options={paypalConfig}>
+      <PayPalScriptProvider options={initialOptions}>
         <div className="relative space-y-4">
           {scriptError ? (
             <div className="text-red-500 text-center p-4">
@@ -84,7 +84,6 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
                 disabled={isProcessing}
                 createOrder={(data, actions) => {
                   return actions.order.create({
-                    intent: "CAPTURE",
                     purchase_units: [
                       {
                         amount: {
@@ -97,12 +96,9 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
                   });
                 }}
                 onApprove={handlePaypalApprove}
-                onError={(err: Record<string, unknown>) => {
+                onError={(err) => {
                   console.error("PayPal Error:", err);
-                  const errorMessage = err.message 
-                    ? String(err.message)
-                    : "Une erreur inconnue est survenue";
-                  setScriptError(errorMessage);
+                  setScriptError("Une erreur est survenue avec PayPal");
                   toast.error("Une erreur est survenue avec PayPal");
                 }}
                 onCancel={() => {
