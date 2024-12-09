@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Search, FileText, Loader2, Database, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -7,46 +7,12 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import NavButtons from "@/components/NavButtons";
 import AdminButton from "@/components/AdminButton";
-import { supabase } from "@/lib/supabase";
-import MaintenanceScreen from "@/components/MaintenanceScreen";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState<any[]>([]);
   const { toast } = useToast();
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchMaintenanceStatus = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('site_settings')
-          .select('maintenance_mode')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (error) throw error;
-        setMaintenanceMode(data?.maintenance_mode || false);
-      } catch (error) {
-        console.error('Error fetching maintenance status:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchMaintenanceStatus();
-  }, []);
-
-  if (isLoading) {
-    return <MaintenanceScreen />;
-  }
-
-  if (maintenanceMode) {
-    return <MaintenanceScreen />;
-  }
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
