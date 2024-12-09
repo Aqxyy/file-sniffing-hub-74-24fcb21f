@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Discord } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 
 const Support = () => {
   return (
@@ -14,7 +14,7 @@ const Support = () => {
         rel="noopener noreferrer"
       >
         <Button className="w-full">
-          <Discord className="w-5 h-5 mr-2" />
+          <MessageSquare className="w-5 h-5 mr-2" />
           Rejoindre Discord
         </Button>
       </a>
