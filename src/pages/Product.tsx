@@ -73,16 +73,6 @@ const Product = () => {
           <p className="text-gray-300 text-lg">
             Accédez à la plus grande base de données de recherche avec des fonctionnalités avancées et un support premium
           </p>
-          <div className="mt-4">
-            <a 
-              href="https://discord.com/invite/UfnBUHXbDV"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-400 hover:text-blue-300"
-            >
-              Contactez nous
-            </a>
-          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-7xl mx-auto">
@@ -151,7 +141,7 @@ const Product = () => {
         <div className="text-center mt-12 text-gray-400">
           Besoin d'une solution personnalisée ?{" "}
           <a 
-            href="https://discord.com/invite/UfnBUHXbDV" 
+            href="https://discord.gg/NKVRWEnqmZ" 
             target="_blank" 
             rel="noopener noreferrer" 
             className="text-blue-400 hover:text-blue-300"
