@@ -55,13 +55,12 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
   };
 
   const paypalConfig = {
-    clientId: "AQSK9-m4vRwgDgQwhSipOw56fmMZJPSTWdBeUllYIFIqVSVLUDec_aGnaqnOC-6bKpYRaS68DPaZGnts",
+    "client-id": "AQSK9-m4vRwgDgQwhSipOw56fmMZJPSTWdBeUllYIFIqVSVLUDec_aGnaqnOC-6bKpYRaS68DPaZGnts",
     currency: "EUR",
     intent: "capture",
     components: "buttons",
     "enable-funding": "paylater",
-    "disable-funding": "credit,card",
-    env: "production" // Changed from sandbox to production
+    "disable-funding": "credit,card"
   };
 
   return (
@@ -118,8 +117,8 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
       </PayPalScriptProvider>
 
       <Button 
-        variant="ghost"
-        className="w-full bg-transparent hover:bg-accent hover:text-accent-foreground"
+        variant="secondary"
+        className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900"
         onClick={onCancel}
         disabled={isProcessing}
       >
