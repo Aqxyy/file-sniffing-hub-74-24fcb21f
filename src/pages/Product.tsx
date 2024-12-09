@@ -21,7 +21,7 @@ const Product = () => {
         .from('subscriptions')
         .select('plan_type, status, api_access')
         .eq('user_id', user.id)
-        .maybeSingle(); // Use maybeSingle instead of single
+        .maybeSingle();
         
       if (error) {
         console.error('Error fetching subscription:', error);
@@ -119,7 +119,7 @@ const Product = () => {
         <div className="text-center mt-12 text-gray-400">
           Besoin d'une solution personnalisée ?{" "}
           <a 
-            href="https://discord.gg/your-discord-link" 
+            href="https://discord.gg/zeenbase" 
             target="_blank" 
             rel="noopener noreferrer" 
             className="text-blue-400 hover:text-blue-300"

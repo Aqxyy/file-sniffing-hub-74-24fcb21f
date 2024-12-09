@@ -32,7 +32,7 @@ const Support = () => {
               Rejoignez notre communauté Discord pour obtenir de l'aide en temps réel.
             </p>
             <a 
-              href="https://discord.gg/your-discord-link" 
+              href="https://discord.gg/zeenbase" 
               target="_blank" 
               rel="noopener noreferrer"
             >
