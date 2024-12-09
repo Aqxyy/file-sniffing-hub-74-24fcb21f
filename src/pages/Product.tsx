@@ -1,132 +1,66 @@
-import { useAuth } from "@/contexts/AuthContext";
-import NavButtons from "@/components/NavButtons";
-import PricingPlan from "@/components/pricing/PricingPlan";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { MessageSquare } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
-const Product = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+const DISCORD_INVITE_URL = "https://discord.com/invite/UfnBUHXbDV";
 
-  // Fetch current subscription status
-  const { data: subscription } = useQuery({
-    queryKey: ['subscription', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      
+const Product = () => {
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+
+  useEffect(() => {
+    const fetchMaintenanceStatus = async () => {
       const { data, error } = await supabase
-        .from('subscriptions')
-        .select('plan_type, status, api_access')
-        .eq('user_id', user.id)
+        .from('site_settings')
+        .select('maintenance_mode')
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
-        
-      if (error) {
-        console.error('Error fetching subscription:', error);
-        return null;
+
+      if (!error && data) {
+        setMaintenanceMode(data.maintenance_mode);
       }
-      
-      return data;
-    },
-    enabled: !!user?.id
-  });
+    };
+
+    fetchMaintenanceStatus();
+
+    const channel = supabase
+      .channel('site_settings_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'site_settings',
+        },
+        (payload) => {
+          setMaintenanceMode(payload.new.maintenance_mode);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, []);
+
+  if (maintenanceMode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center">
+        <h1 className="text-2xl text-white">Maintenance...</h1>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
-      <NavButtons />
-      <div className="container mx-auto px-4 py-16">
-        <Button 
-          variant="ghost" 
-          className="text-white mb-4"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Retour à la recherche
-        </Button>
-        
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-4">Choisissez votre plan</h1>
-          <p className="text-gray-300 text-lg">
-            Accédez à la plus grande base de données de recherche avec des fonctionnalités avancées et un support premium
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-7xl mx-auto">
-          <PricingPlan 
-            name="Gratuit" 
-            price="0" 
-            period="€"
-            variant="default"
-            features={[
-              { text: "10 recherches par jour" },
-              { text: "Résultats limités" },
-              { text: "Support basique" }
-            ]}
-            buttonText=""
-            currentPlan={!subscription?.plan_type || subscription.plan_type === 'free'}
-          />
-          <PricingPlan 
-            name="Standard" 
-            price="9.99" 
-            period="€/mois"
-            variant="popular"
-            buttonText="S'abonner"
-            features={[
-              { text: "35 recherches par jour" },
-              { text: "Accès complet aux résultats" },
-              { text: "Support prioritaire" },
-              { text: "Accès aux bases premium" }
-            ]}
-            priceId="price_1QTZHvEeS2EtyeTMNWeSozYu"
-            currentPlan={subscription?.plan_type === 'standard' && subscription.status === 'active'}
-          />
-          <PricingPlan 
-            name="Pro" 
-            price="49.99" 
-            period="€/mois"
-            variant="default"
-            buttonText="S'abonner"
-            features={[
-              { text: "Tout le plan Standard" },
-              { text: "Clé API personnelle" },
-              { text: "Support dédié 24/7" },
-              { text: "Exports illimités" },
-              { text: "Personnalisation avancée" }
-            ]}
-            priceId="price_1QTZHIEeS2EtyeTMIobx6y3O"
-            currentPlan={subscription?.plan_type === 'pro' && subscription.status === 'active'}
-          />
-          <PricingPlan 
-            name="API Lifetime" 
-            price="119.99" 
-            period="€"
-            variant="default"
-            buttonText="S'abonner"
-            features={[
-              { text: "Clé API personnelle illimitée" },
-              { text: "Support dédié 24/7" },
-              { text: "Accès à vie" },
-              { text: "Mises à jour gratuites" },
-              { text: "Personnalisation avancée" }
-            ]}
-            priceId="price_1QTZwZEeS2EtyeTMcYOFcClK"
-            currentPlan={subscription?.plan_type === 'lifetime' && subscription.status === 'active' && subscription.api_access}
-          />
-        </div>
-
-        <div className="text-center mt-12 text-gray-400">
-          Besoin d'une solution personnalisée ?{" "}
-          <a 
-            href="https://discord.gg/zeenbase" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-blue-400 hover:text-blue-300"
-          >
-            Contactez-nous sur Discord
-          </a>
-        </div>
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 py-12 px-4">
+      <div className="text-center mt-8">
+        <a href={DISCORD_INVITE_URL} target="_blank" rel="noopener noreferrer">
+          <Button variant="outline" className="bg-indigo-600 text-white hover:bg-indigo-700">
+            <MessageSquare className="w-4 h-4 mr-2" />
+            Nous contacter sur Discord
+          </Button>
+        </a>
       </div>
     </div>
   );

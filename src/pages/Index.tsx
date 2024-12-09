@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, FileText, Loader2, Database, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -7,12 +7,52 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import NavButtons from "@/components/NavButtons";
 import AdminButton from "@/components/AdminButton";
+import MaintenanceScreen from "@/components/MaintenanceScreen";
+import { supabase } from "@/lib/supabase";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState<any[]>([]);
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchMaintenanceStatus = async () => {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('maintenance_mode')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!error && data) {
+        setIsMaintenanceMode(data.maintenance_mode);
+      }
+    };
+
+    fetchMaintenanceStatus();
+
+    // Subscribe to changes in site_settings
+    const channel = supabase
+      .channel('site_settings_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'site_settings',
+        },
+        (payload) => {
+          setIsMaintenanceMode(payload.new.maintenance_mode);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, []);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +91,10 @@ const Index = () => {
       setIsSearching(false);
     }
   };
+
+  if (isMaintenanceMode) {
+    return <MaintenanceScreen />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
