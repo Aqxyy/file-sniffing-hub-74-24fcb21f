@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import AverageRating from "./AverageRating";
 
 const FeedbackForm = () => {
   const [rating, setRating] = useState(0);
@@ -142,6 +143,8 @@ const FeedbackForm = () => {
   return (
     <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 max-w-2xl mx-auto">
       <h2 className="text-2xl font-semibold text-white mb-6">Donnez-nous votre avis</h2>
+      
+      {!hasSubmittedFeedback && <AverageRating />}
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
