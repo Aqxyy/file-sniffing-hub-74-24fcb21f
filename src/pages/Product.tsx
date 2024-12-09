@@ -1,40 +1,35 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 const Product = () => {
-  const [productData, setProductData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchProductData = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .single();
-
-        if (error) throw error;
-        setProductData(data);
-      } catch (error) {
-        console.error('Error fetching product data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProductData();
-  }, []);
-
-  if (isLoading) {
-    return <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />;
-  }
-
   return (
     <div className="container mx-auto px-4 py-16">
-      <h1 className="text-3xl font-bold text-white mb-4">{productData?.name}</h1>
-      <p className="text-gray-400 mb-4">{productData?.description}</p>
+      <h1 className="text-3xl font-bold text-white mb-8">Nos offres</h1>
+      
+      <div className="grid md:grid-cols-2 gap-8">
+        <Card className="p-6 bg-gray-800/50 border-gray-700">
+          <h2 className="text-2xl font-semibold text-white mb-4">Standard</h2>
+          <ul className="space-y-3 text-gray-300 mb-6">
+            <li>✓ Accès à la recherche avancée</li>
+            <li>✓ Support communautaire</li>
+            <li>✓ Mises à jour régulières</li>
+          </ul>
+          <div className="text-3xl font-bold text-white mb-6">29€/mois</div>
+          <Button className="w-full">Souscrire</Button>
+        </Card>
+
+        <Card className="p-6 bg-gray-800/50 border-gray-700">
+          <h2 className="text-2xl font-semibold text-white mb-4">Premium</h2>
+          <ul className="space-y-3 text-gray-300 mb-6">
+            <li>✓ Tout ce qui est inclus dans Standard</li>
+            <li>✓ Accès à l'API</li>
+            <li>✓ Support prioritaire</li>
+          </ul>
+          <div className="text-3xl font-bold text-white mb-6">49€/mois</div>
+          <Button className="w-full">Souscrire</Button>
+        </Card>
+      </div>
+
       <div className="text-center mt-12 text-gray-400">
         Besoin d'une solution personnalisée ?{" "}
         <a 
