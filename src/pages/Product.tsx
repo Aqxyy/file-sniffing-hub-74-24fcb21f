@@ -1,132 +1,63 @@
-import { useAuth } from "@/contexts/AuthContext";
-import NavButtons from "@/components/NavButtons";
-import PricingPlan from "@/components/pricing/PricingPlan";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
+import { PricingPlan } from "@/components/pricing/PricingPlan";
+import { PricingFeatures } from "@/components/pricing/PricingFeatures";
+import { PaymentOptions } from "@/components/pricing/PaymentOptions";
+import NavButtons from "@/components/NavButtons";
+import AdminButton from "@/components/AdminButton";
+
+const DISCORD_INVITE_URL = "https://discord.com/invite/UfnBUHXbDV";
 
 const Product = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-
-  // Fetch current subscription status
-  const { data: subscription } = useQuery({
-    queryKey: ['subscription', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      
-      const { data, error } = await supabase
-        .from('subscriptions')
-        .select('plan_type, status, api_access')
-        .eq('user_id', user.id)
-        .maybeSingle();
-        
-      if (error) {
-        console.error('Error fetching subscription:', error);
-        return null;
-      }
-      
-      return data;
-    },
-    enabled: !!user?.id
-  });
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 p-8">
       <NavButtons />
-      <div className="container mx-auto px-4 py-16">
-        <Button 
-          variant="ghost" 
-          className="text-white mb-4"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Retour à la recherche
-        </Button>
-        
+      <AdminButton />
+      
+      <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-4">Choisissez votre plan</h1>
-          <p className="text-gray-300 text-lg">
-            Accédez à la plus grande base de données de recherche avec des fonctionnalités avancées et un support premium
+          <h1 className="text-4xl font-bold text-white mb-4">Nos Offres</h1>
+          <p className="text-gray-300 mb-8">
+            Choisissez l'offre qui correspond le mieux à vos besoins
           </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-7xl mx-auto">
-          <PricingPlan 
-            name="Gratuit" 
-            price="0" 
-            period="€"
-            variant="default"
-            features={[
-              { text: "10 recherches par jour" },
-              { text: "Résultats limités" },
-              { text: "Support basique" }
-            ]}
-            buttonText=""
-            currentPlan={!subscription?.plan_type || subscription.plan_type === 'free'}
-          />
-          <PricingPlan 
-            name="Standard" 
-            price="9.99" 
-            period="€/mois"
-            variant="popular"
-            buttonText="S'abonner"
-            features={[
-              { text: "35 recherches par jour" },
-              { text: "Accès complet aux résultats" },
-              { text: "Support prioritaire" },
-              { text: "Accès aux bases premium" }
-            ]}
-            priceId="price_1QTZHvEeS2EtyeTMNWeSozYu"
-            currentPlan={subscription?.plan_type === 'standard' && subscription.status === 'active'}
-          />
-          <PricingPlan 
-            name="Pro" 
-            price="49.99" 
-            period="€/mois"
-            variant="default"
-            buttonText="S'abonner"
-            features={[
-              { text: "Tout le plan Standard" },
-              { text: "Clé API personnelle" },
-              { text: "Support dédié 24/7" },
-              { text: "Exports illimités" },
-              { text: "Personnalisation avancée" }
-            ]}
-            priceId="price_1QTZHIEeS2EtyeTMIobx6y3O"
-            currentPlan={subscription?.plan_type === 'pro' && subscription.status === 'active'}
-          />
-          <PricingPlan 
-            name="API Lifetime" 
-            price="119.99" 
-            period="€"
-            variant="default"
-            buttonText="S'abonner"
-            features={[
-              { text: "Clé API personnelle illimitée" },
-              { text: "Support dédié 24/7" },
-              { text: "Accès à vie" },
-              { text: "Mises à jour gratuites" },
-              { text: "Personnalisation avancée" }
-            ]}
-            priceId="price_1QTZwZEeS2EtyeTMcYOFcClK"
-            currentPlan={subscription?.plan_type === 'lifetime' && subscription.status === 'active' && subscription.api_access}
-          />
-        </div>
-
-        <div className="text-center mt-12 text-gray-400">
-          Besoin d'une solution personnalisée ?{" "}
           <a 
-            href="https://discord.gg/zeenbase" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-blue-400 hover:text-blue-300"
+            href={DISCORD_INVITE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block"
           >
-            Contactez-nous sur Discord
+            <Button variant="outline" className="bg-blue-900 text-white hover:bg-blue-800 border-blue-700">
+              Contactez nous
+            </Button>
           </a>
         </div>
+
+        <div className="grid md:grid-cols-2 gap-8 mb-12">
+          <PricingPlan
+            title="Standard"
+            price="19.99€"
+            description="Pour les petites équipes"
+            features={[
+              "Accès à l'API",
+              "Support par email",
+              "Mises à jour régulières",
+            ]}
+          />
+          <PricingPlan
+            title="Premium"
+            price="49.99€"
+            description="Pour les équipes professionnelles"
+            features={[
+              "Accès illimité à l'API",
+              "Support prioritaire",
+              "Fonctionnalités avancées",
+              "Statistiques détaillées",
+            ]}
+          />
+        </div>
+
+        <PricingFeatures />
+        <PaymentOptions />
       </div>
     </div>
   );
