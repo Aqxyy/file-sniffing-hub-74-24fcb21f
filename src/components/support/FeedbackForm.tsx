@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Star } from "lucide-react";
@@ -10,12 +10,43 @@ const FeedbackForm = () => {
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmittedFeedback, setHasSubmittedFeedback] = useState(false);
   const { user } = useAuth();
+
+  useEffect(() => {
+    const checkExistingFeedback = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('feedback')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error("Error checking feedback:", error);
+          return;
+        }
+
+        setHasSubmittedFeedback(!!data);
+      } catch (error) {
+        console.error("Error checking feedback:", error);
+      }
+    };
+
+    checkExistingFeedback();
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (rating === 0) {
       toast.error("Veuillez sélectionner une note");
+      return;
+    }
+
+    if (hasSubmittedFeedback) {
+      toast.error("Vous avez déjà soumis un feedback");
       return;
     }
 
@@ -34,7 +65,10 @@ const FeedbackForm = () => {
 
       if (error) {
         console.error("Supabase error:", error);
-        if (error.code === "404" || error.message.includes("404")) {
+        if (error.code === '23505') { // Unique violation
+          toast.error("Vous avez déjà soumis un feedback");
+          setHasSubmittedFeedback(true);
+        } else if (error.code === "404" || error.message.includes("404")) {
           toast.error("Le système de feedback n'est pas encore disponible. Veuillez réessayer plus tard.");
         } else {
           toast.error("Une erreur est survenue lors de l'envoi du feedback");
@@ -45,6 +79,7 @@ const FeedbackForm = () => {
       toast.success("Merci pour votre feedback !");
       setRating(0);
       setFeedback("");
+      setHasSubmittedFeedback(true);
     } catch (error) {
       console.error("Submission error:", error);
       toast.error("Une erreur est survenue lors de l'envoi du feedback");
@@ -52,6 +87,15 @@ const FeedbackForm = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (hasSubmittedFeedback) {
+    return (
+      <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 max-w-2xl mx-auto">
+        <h2 className="text-2xl font-semibold text-white mb-4">Merci pour votre feedback !</h2>
+        <p className="text-gray-300">Vous avez déjà soumis votre avis. Nous vous remercions de votre participation.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 max-w-2xl mx-auto">
