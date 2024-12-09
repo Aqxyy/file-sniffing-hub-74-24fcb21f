@@ -3,7 +3,6 @@ import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useState, useEffect } from "react";
-import { CreditCard } from "lucide-react";
 
 interface PaymentOptionsProps {
   priceNumber: number;
@@ -55,10 +54,6 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
     }
   };
 
-  const handleCardPayment = () => {
-    toast.info("Le paiement par carte bancaire sera bientôt disponible");
-  };
-
   return (
     <div className="w-full space-y-4">
       <PayPalScriptProvider 
@@ -67,8 +62,8 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
           currency: "EUR",
           intent: "capture",
           components: "buttons",
-          "enable-funding": "paylater,card",
-          "disable-funding": "credit"
+          "enable-funding": "paylater",
+          "disable-funding": "credit,card"
         }}
       >
         <div className="relative">
@@ -124,18 +119,62 @@ const PaymentOptions = ({ priceNumber, planName, onCancel, isProcessing }: Payme
         </div>
       </PayPalScriptProvider>
 
-      <Button 
-        variant="outline"
-        className="w-full flex items-center justify-center gap-2"
-        onClick={handleCardPayment}
+      <PayPalScriptProvider 
+        options={{ 
+          clientId: "AZDxjDScFpQtjWTOUtWKbyN_bDt4OgqaF4eYXlewfBP4-8aqX3PiV8e1GWU6liB2CUXlkA59kJXE7M6R",
+          currency: "EUR",
+          intent: "capture",
+          components: "buttons",
+          "enable-funding": "paylater",
+          "disable-funding": "credit,card"
+        }}
       >
-        <CreditCard className="h-4 w-4" />
-        Payer par carte bancaire
-      </Button>
+        <div className="relative">
+          <PayPalButtons
+            forceReRender={[priceNumber]}
+            style={{ 
+              layout: "horizontal",
+              shape: "rect",
+              color: "gold",
+              height: 45
+            }}
+            disabled={isProcessing}
+            fundingSource="paylater"
+            createOrder={(data, actions) => {
+              return actions.order.create({
+                intent: "CAPTURE",
+                purchase_units: [
+                  {
+                    amount: {
+                      value: priceNumber.toString(),
+                      currency_code: "EUR"
+                    },
+                    description: `Abonnement ${planName} en 4 fois`
+                  }
+                ]
+              });
+            }}
+            onApprove={handlePaypalApprove}
+            onError={(err: Record<string, unknown>) => {
+              console.error("PayPal Error:", err);
+              const errorMessage = err.message 
+                ? String(err.message)
+                : "Une erreur inconnue est survenue";
+              setScriptError(errorMessage);
+              toast.error("Une erreur est survenue avec PayPal");
+            }}
+            onCancel={() => {
+              console.log("Payment cancelled");
+              toast.info("Paiement annulé");
+              onCancel();
+            }}
+          />
+        </div>
+      </PayPalScriptProvider>
 
       <Button 
         variant="ghost"
-        className="w-full"
+        className="w-full bg-transparent hover:bg-accent hover:text-accent-foreground"
         onClick={onCancel}
         disabled={isProcessing}
       >
