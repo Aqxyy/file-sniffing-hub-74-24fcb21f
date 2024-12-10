@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { validateUser, checkAccess } from "./auth.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.1'
 import { getApiKey, regenerateApiKey } from "./apiKeyManager.ts"
 
 const corsHeaders = {
@@ -17,39 +17,52 @@ serve(async (req) => {
   }
 
   try {
-    // Validate user and get Supabase client
-    const { user, supabaseClient } = await validateUser(req.headers.get('Authorization'));
-    console.log("User validated:", user.id);
-    
-    // Check access permissions
-    await checkAccess(supabaseClient, user);
-    console.log("Access checked and validated");
-
-    // Handle GET request - fetch existing API key
-    if (req.method === 'GET') {
-      console.log("Processing GET request for API key");
-      const apiKey = await getApiKey(supabaseClient, user.id);
-      return new Response(
-        JSON.stringify({ api_key: apiKey }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Get auth header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header');
     }
 
-    // Handle POST request - regenerate API key
-    if (req.method === 'POST') {
-      console.log("Processing POST request to regenerate API key");
-      const apiKey = await regenerateApiKey(supabaseClient, user.id);
-      return new Response(
-        JSON.stringify({ api_key: apiKey }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing environment variables');
+    }
+
+    const supabaseClient = createClient(supabaseUrl, supabaseKey);
+    
+    // Get user from token
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+
+    if (userError || !user) {
+      console.error("Auth error:", userError);
+      throw new Error('Unauthorized');
+    }
+
+    console.log("Processing request for user:", user.id);
+
+    let result;
+    if (req.method === 'GET') {
+      result = await getApiKey(supabaseClient, user.id);
+    } else if (req.method === 'POST') {
+      const body = await req.json().catch(() => ({}));
+      if (body.action === 'regenerate') {
+        result = await regenerateApiKey(supabaseClient, user.id);
+      } else {
+        throw new Error('Invalid action');
+      }
+    } else {
+      throw new Error('Method not allowed');
     }
 
     return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
+      JSON.stringify({ api_key: result }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 405
+        status: 200
       }
     );
 
