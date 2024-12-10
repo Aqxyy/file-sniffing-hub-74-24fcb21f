@@ -22,25 +22,39 @@ serve(async (req) => {
   try {
     // Validate user and get Supabase client
     const { user, supabaseClient } = await validateUser(req.headers.get('Authorization'));
+    console.log("User validated:", user.id);
     
     // Check access permissions
     await checkAccess(supabaseClient, user);
+    console.log("Access checked and validated");
 
     // Handle GET request - fetch existing API key
     if (req.method === 'GET') {
+      console.log("Processing GET request for API key");
       const apiKey = await getApiKey(supabaseClient, user.id);
       return new Response(
         JSON.stringify({ api_key: apiKey }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
       );
     }
 
     // Handle POST request - regenerate API key
     if (req.method === 'POST') {
+      console.log("Processing POST request to regenerate API key");
       const apiKey = await regenerateApiKey(supabaseClient, user.id);
       return new Response(
         JSON.stringify({ api_key: apiKey }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
       );
     }
 
