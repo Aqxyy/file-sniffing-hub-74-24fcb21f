@@ -13,19 +13,10 @@ import Api from "./pages/Api";
 import Admin from "./pages/Admin";
 import { useAuth } from "./contexts/AuthContext";
 import { toast } from "sonner";
-import { useEffect } from "react";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      staleTime: 5 * 60 * 1000,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
-// Protected Route Component avec vérification de sécurité renforcée
+// Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
@@ -45,7 +36,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Admin Route Component avec vérification stricte
+// Admin Route Component
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
@@ -53,7 +44,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
     return <div>Loading...</div>;
   }
   
-  if (!user || user.email !== "williamguerif@gmail.com" || !user.email_confirmed_at) {
+  if (!user || user.email !== "williamguerif@gmail.com") {
     toast.error("Accès non autorisé");
     return <Navigate to="/" />;
   }
@@ -61,7 +52,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Public Route Component avec protection contre les attaques
+// Public Route Component
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
@@ -139,40 +130,18 @@ const AppRoutes = () => {
   );
 };
 
-const App = () => {
-  useEffect(() => {
-    // Content Security Policy
-    const meta = document.createElement('meta');
-    meta.httpEquiv = "Content-Security-Policy";
-    meta.content = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';";
-    document.head.appendChild(meta);
-
-    // X-Frame-Options
-    const xFrameOptions = document.createElement('meta');
-    xFrameOptions.httpEquiv = "X-Frame-Options";
-    xFrameOptions.content = "DENY";
-    document.head.appendChild(xFrameOptions);
-
-    // X-Content-Type-Options
-    const xContentTypeOptions = document.createElement('meta');
-    xContentTypeOptions.httpEquiv = "X-Content-Type-Options";
-    xContentTypeOptions.content = "nosniff";
-    document.head.appendChild(xContentTypeOptions);
-  }, []);
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <AppRoutes />
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
-};
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;
