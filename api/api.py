@@ -2,15 +2,10 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
 import time
-from concurrent.futures import ThreadPoolExecutor
-import re
-import jwt
-from functools import wraps
+from elasticsearch import Elasticsearch
 import html
 import bleach
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
-import secrets
+from functools import wraps
 
 app = Flask(__name__)
 CORS(app, resources={
@@ -21,7 +16,12 @@ CORS(app, resources={
     }
 })
 
+# Configuration Elasticsearch
+es = Elasticsearch(['http://localhost:9200'])
+
 DATA_DIR = "data"
+INDEX_NAME = "zeenbase"
+
 print(f"Démarrage de l'API. Dossier de données: {DATA_DIR}")
 print(f"Chemin absolu du dossier de données: {os.path.abspath(DATA_DIR)}")
 
@@ -30,14 +30,12 @@ def sanitize_input(text):
     return bleach.clean(str(text))
 
 def verify_api_key(api_key):
-    # Vérification basique de la clé API
     print(f"Vérification de la clé API: {api_key[:5]}...")
     return api_key and api_key.startswith("sk_")
 
 def require_api_key(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        # Ne pas vérifier la clé API pour les requêtes OPTIONS
         if request.method == 'OPTIONS':
             return '', 204
             
@@ -49,7 +47,6 @@ def require_api_key(f):
             print("Pas de clé API fournie")
             return jsonify({"error": "No API key provided"}), 401
         
-        # Nettoyer le préfixe Bearer si présent
         api_key = api_key.replace('Bearer ', '')
         
         if not verify_api_key(api_key):
@@ -59,38 +56,29 @@ def require_api_key(f):
         return f(*args, **kwargs)
     return decorated
 
-def search_in_file(file_path, keyword):
-    try:
-        print(f"Lecture du fichier: {file_path}")
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-            if sanitize_input(keyword.lower()) in content.lower():
-                print(f"Correspondance trouvée dans: {file_path}")
-                return {
-                    "path": file_path,
-                    "type": "file",
-                    "size": os.path.getsize(file_path),
-                    "last_modified": time.ctime(os.path.getmtime(file_path))
-                }
-    except Exception as e:
-        print(f"Erreur lors de la lecture de {file_path}: {e}")
-    return None
-
-def get_all_files(directory):
-    print(f"Recherche de fichiers dans: {directory}")
-    if not os.path.exists(directory):
-        print(f"Le répertoire {directory} n'existe pas")
-        return []
+def index_files():
+    """Index all text files in the data directory"""
+    if not es.indices.exists(index=INDEX_NAME):
+        es.indices.create(index=INDEX_NAME)
         
-    all_files = []
-    for root, dirs, files in os.walk(directory):
+    for root, dirs, files in os.walk(DATA_DIR):
         for file in files:
             if file.endswith('.txt'):
                 file_path = os.path.join(root, file)
-                print(f"Fichier trouvé: {file_path}")
-                all_files.append(file_path)
-    print(f"Total des fichiers trouvés: {len(all_files)}")
-    return all_files
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        doc = {
+                            'path': file_path,
+                            'content': content,
+                            'type': 'file',
+                            'size': os.path.getsize(file_path),
+                            'last_modified': time.ctime(os.path.getmtime(file_path))
+                        }
+                        es.index(index=INDEX_NAME, document=doc)
+                    print(f"Fichier indexé: {file_path}")
+                except Exception as e:
+                    print(f"Erreur lors de l'indexation de {file_path}: {e}")
 
 @app.route('/search', methods=['POST', 'OPTIONS'])
 @require_api_key
@@ -118,47 +106,42 @@ def search():
     keyword = sanitize_input(keyword)
     print(f"Recherche du mot-clé: {keyword}")
     
-    if not hasattr(search, 'last_request'):
-        search.last_request = {}
-    
-    client_ip = request.remote_addr
-    current_time = time.time()
-    
-    if client_ip in search.last_request:
-        time_diff = current_time - search.last_request[client_ip]
-        if time_diff < 1:
-            print(f"Rate limit dépassé pour {client_ip}")
-            return jsonify({"error": "Rate limit exceeded"}), 429
-    
-    search.last_request[client_ip] = current_time
-
     start_time = time.time()
-    all_files = get_all_files(DATA_DIR)
-    print(f"Nombre de fichiers trouvés: {len(all_files)}")
     
-    with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
-        search_results = list(filter(None, executor.map(
-            lambda x: search_in_file(x, keyword), 
-            all_files
-        )))
+    try:
+        search_query = {
+            "query": {
+                "match": {
+                    "content": keyword
+                }
+            }
+        }
+        
+        response = es.search(index=INDEX_NAME, body=search_query)
+        hits = response['hits']['hits']
+        
+        results = []
+        for hit in hits:
+            source = hit['_source']
+            result = {
+                "path": html.escape(source['path']),
+                "type": html.escape(source['type']),
+                "size": source['size'],
+                "last_modified": html.escape(source['last_modified'])
+            }
+            results.append(result)
+            
+    except Exception as e:
+        print(f"Erreur lors de la recherche: {e}")
+        return jsonify({"error": "Search error"}), 500
 
     execution_time = time.time() - start_time
     
-    safe_results = []
-    for result in search_results:
-        safe_result = {
-            "path": html.escape(result["path"]),
-            "type": html.escape(result["type"]),
-            "size": result["size"],
-            "last_modified": html.escape(result["last_modified"])
-        }
-        safe_results.append(safe_result)
-    
     response_data = {
-        "results": safe_results,
-        "total_files_searched": len(all_files),
+        "results": results,
+        "total_files_searched": len(results),
         "execution_time": execution_time,
-        "total_results": len(safe_results)
+        "total_results": len(results)
     }
     
     print(f"Recherche terminée en {execution_time:.2f} secondes")
@@ -166,8 +149,7 @@ def search():
     return jsonify(response_data)
 
 if __name__ == '__main__':
-    if not os.path.exists(DATA_DIR):
-        os.makedirs(DATA_DIR)
-        print(f"Répertoire {DATA_DIR} créé")
+    print("Indexation des fichiers...")
+    index_files()
     print("Démarrage du serveur Flask sur le port 5000...")
     app.run(debug=True, port=5000)
