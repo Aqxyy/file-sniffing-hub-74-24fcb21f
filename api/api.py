@@ -14,11 +14,17 @@ CORS(app, resources={
 LEAKOSINT_TOKEN = "5425922455:GJqhUctH"
 LEAKOSINT_URL = 'https://server.leakosint.com/'
 
-@app.route('/search', methods=['GET'])
+@app.route('/search', methods=['GET', 'POST'])  # Added POST method
 def search():
-    query = request.args.get('q', '')
+    # Get query from either GET or POST
+    if request.method == 'POST':
+        data = request.get_json()
+        query = data.get('q', '')
+    else:
+        query = request.args.get('q', '')
+
     try:
-        # Appel à l'API Leakosint
+        # Call to Leakosint API
         leakosint_data = {
             "token": LEAKOSINT_TOKEN,
             "request": query,
@@ -31,9 +37,9 @@ def search():
         
         return jsonify(results)
     except Exception as e:
-        print(f"Erreur lors de la recherche: {str(e)}")
+        print(f"Error during search: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    print("Démarrage de l'API sur le port 5000...")
+    print("Starting API on port 5000...")
     app.run(debug=True, port=5000)
