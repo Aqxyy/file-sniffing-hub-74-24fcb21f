@@ -98,9 +98,17 @@ const Index = () => {
       
       if (data && data.results) {
         setResults(Array.isArray(data.results) ? data.results : []);
+        toast({
+          title: "Succès",
+          description: "Résultats trouvés avec succès",
+        });
       } else {
         setResults([]);
         console.warn("No results array in response:", data);
+        toast({
+          title: "Information",
+          description: "Aucun résultat trouvé",
+        });
       }
     } catch (error) {
       console.error("Search error:", error);
@@ -113,6 +121,8 @@ const Index = () => {
       setIsSearching(false);
     }
   };
+
+  // ... keep existing code (JSX for the search form and results display)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
@@ -162,9 +172,6 @@ const Index = () => {
               )}
             </Button>
           </form>
-
-          <div className="text-center text-gray-300 text-sm">
-          </div>
         </motion.div>
 
         <AnimatePresence>
@@ -178,7 +185,9 @@ const Index = () => {
               <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-white">Résultats</h2>
-                  <span className="text-gray-300 text-sm">{results.length} correspondances trouvées</span>
+                  <span className="text-gray-300 text-sm">
+                    {results.length} correspondances trouvées
+                  </span>
                 </div>
                 <div className="relative backdrop-blur-sm rounded-lg p-8 text-center">
                   <Lock className="w-16 h-16 text-primary mx-auto mb-4" />

@@ -14,7 +14,7 @@ CORS(app, resources={
 LEAKOSINT_TOKEN = "5425922455:GJqhUctH"
 LEAKOSINT_URL = 'https://server.leakosint.com/'
 
-@app.route('/search', methods=['POST'])  # Changed to only allow POST
+@app.route('/search', methods=['POST'])
 def search():
     try:
         # Get query from POST request body
@@ -32,8 +32,15 @@ def search():
             "lang": "en"
         }
         
+        print(f"Sending request to Leakosint: {leakosint_data}")
         response = requests.post(LEAKOSINT_URL, json=leakosint_data)
+        
+        if not response.ok:
+            print(f"Error from Leakosint: Status {response.status_code}, Response: {response.text}")
+            return jsonify({"error": "Error from Leakosint API"}), response.status_code
+            
         results = response.json()
+        print(f"Received response from Leakosint: {results}")
         
         return jsonify(results)
     except Exception as e:
