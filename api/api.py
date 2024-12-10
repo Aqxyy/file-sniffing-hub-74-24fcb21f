@@ -13,10 +13,9 @@ from sqlalchemy import create_engine
 import secrets
 
 app = Flask(__name__)
-# Autoriser explicitement localhost:5173 pour le développement
 CORS(app, resources={
     r"/*": {
-        "origins": ["http://localhost:5173"],
+        "origins": ["http://localhost:5173", "http://localhost:8080"],
         "methods": ["POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
     }
@@ -38,6 +37,10 @@ def verify_api_key(api_key):
 def require_api_key(f):
     @wraps(f)
     def decorated(*args, **kwargs):
+        # Ne pas vérifier la clé API pour les requêtes OPTIONS
+        if request.method == 'OPTIONS':
+            return '', 204
+            
         print("Vérification de l'en-tête Authorization")
         api_key = request.headers.get('Authorization')
         print(f"En-têtes reçus: {request.headers}")
@@ -92,11 +95,6 @@ def get_all_files(directory):
 @app.route('/search', methods=['POST', 'OPTIONS'])
 @require_api_key
 def search():
-    # Gérer les requêtes OPTIONS pour CORS
-    if request.method == 'OPTIONS':
-        print("Requête OPTIONS reçue")
-        return '', 204
-
     print("Nouvelle requête de recherche reçue")
     print(f"Méthode: {request.method}")
     print(f"En-têtes: {request.headers}")
