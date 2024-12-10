@@ -1,5 +1,3 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.1'
-
 export const getApiKey = async (supabaseClient: any, userId: string) => {
   console.log("Fetching API key for user:", userId);
   try {
@@ -47,28 +45,11 @@ export const regenerateApiKey = async (supabaseClient: any, userId: string) => {
   console.log("Starting API key regeneration for user:", userId);
   
   try {
-    // Verify if the user exists and has permission
-    const { data: subscription, error: subError } = await supabaseClient
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-
-    if (subError) {
-      console.error("Subscription verification error:", subError);
-      throw new Error('User verification failed');
-    }
-
-    if (!subscription || !['pro', 'lifetime'].includes(subscription.plan_type) || subscription.status !== 'active') {
-      console.error("Invalid subscription status or plan type");
-      throw new Error('User does not have required subscription');
-    }
-
     // Generate new API key
     const newApiKey = `sk_${crypto.randomUUID()}`;
     console.log("Generated new API key");
 
-    // Start transaction
+    // Deactivate old keys
     const { error: deactivateError } = await supabaseClient
       .from('api_keys')
       .update({ is_active: false })

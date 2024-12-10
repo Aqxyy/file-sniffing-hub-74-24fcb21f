@@ -34,6 +34,7 @@ export const validateUser = async (authHeader: string | null) => {
 export const checkAccess = async (supabaseClient: any, user: any) => {
   console.log("Checking access for user:", user.id);
   
+  // Check if user is admin
   const isAdmin = user.email === "williamguerif@gmail.com";
   console.log("Is admin:", isAdmin);
 
@@ -62,7 +63,7 @@ export const checkAccess = async (supabaseClient: any, user: any) => {
     }
   }
 
-  console.log("Checking site settings");
+  // Check site settings
   const { data: siteSettings, error: settingsError } = await supabaseClient
     .from('site_settings')
     .select('api_enabled')
@@ -81,5 +82,5 @@ export const checkAccess = async (supabaseClient: any, user: any) => {
   }
 
   console.log("Access check completed successfully");
-  return isAdmin;
+  return true;
 };
