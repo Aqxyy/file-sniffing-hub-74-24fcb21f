@@ -71,21 +71,24 @@ const Index = () => {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${apiKeyData.key_value}`,
         },
-        body: JSON.stringify({ q: sanitizedQuery }), // Changed from keyword to q
+        body: JSON.stringify({ q: sanitizedQuery }),
       });
 
       if (!response.ok) {
-        console.error("Erreur API:", response.status, response.statusText);
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Détails de l'erreur:", errorData);
-        throw new Error(`Erreur ${response.status}: ${errorData.error || response.statusText}`);
+        const errorText = await response.text();
+        console.error("Response not OK:", {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log("Résultats de la recherche:", data);
-      setResults(data.results || []); // Added fallback empty array
+      console.log("Search results:", data);
+      setResults(Array.isArray(data.results) ? data.results : []);
     } catch (error) {
-      console.error("Erreur complète:", error);
+      console.error("Search error:", error);
       toast({
         title: "Erreur",
         description: error instanceof Error ? error.message : "Impossible de contacter le serveur de recherche",
@@ -183,6 +186,7 @@ const Index = () => {
       </div>
     </div>
   );
+
 };
 
 export default Index;
