@@ -1,186 +1,123 @@
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import os
-import time
 from elasticsearch import Elasticsearch
-import html
-import bleach
-from functools import wraps
+import glob
+import json
 
 app = Flask(__name__)
 CORS(app, resources={
     r"/*": {
-        "origins": ["http://localhost:5173", "http://localhost:8080"],
-        "methods": ["POST", "OPTIONS"],
+        "origins": "*",
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
     }
 })
 
-# Configuration Elasticsearch avec gestion d'erreur et HTTPS
+# Récupération du mot de passe et du certificat générés lors de l'installation
+elastic_password = ""
+ca_certs = ""
+
 try:
-    # Configuration pour HTTPS
+    # Lire le mot de passe depuis le fichier elastic-passwords.txt
+    password_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
+                                "elasticsearch-8.16.1", "config", "elastic-passwords.txt")
+    if os.path.exists(password_file):
+        with open(password_file, 'r') as f:
+            for line in f:
+                if "elastic =" in line:
+                    elastic_password = line.split("=")[1].strip()
+                    break
+    
+    # Chemin vers le certificat CA
+    ca_certs = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
+                           "elasticsearch-8.16.1", "config", "certs", "http_ca.crt")
+    
+    # Configuration Elasticsearch avec authentification et SSL
     es = Elasticsearch(
-        ['https://localhost:9200'],
-        verify_certs=False,  # En développement uniquement
-        ssl_show_warn=False  # Désactive les avertissements SSL
+        "https://localhost:9200",
+        basic_auth=("elastic", elastic_password),
+        ca_certs=ca_certs,
     )
     
     if not es.ping():
-        print("ERREUR: Impossible de se connecter à Elasticsearch. Assurez-vous qu'il est installé et en cours d'exécution.")
-        print("Instructions d'installation :")
-        print("1. Téléchargez Elasticsearch depuis : https://www.elastic.co/downloads/elasticsearch")
-        print("2. Décompressez le fichier")
-        print("3. Exécutez bin/elasticsearch.bat (Windows) ou bin/elasticsearch (Linux/Mac)")
-        print("4. Attendez que le service démarre (peut prendre quelques minutes)")
-        print("5. Relancez cette API")
+        print("ERREUR: Impossible de se connecter à Elasticsearch.")
+        print("\nInstructions de dépannage:")
+        print("1. Vérifiez que le service Elasticsearch est en cours d'exécution")
+        print("2. Vérifiez le mot de passe dans le fichier elastic-passwords.txt")
+        print("3. Vérifiez que le certificat CA existe dans le dossier config/certs")
         exit(1)
+        
     print("Connexion à Elasticsearch établie avec succès!")
+    
 except Exception as e:
     print(f"ERREUR lors de la connexion à Elasticsearch: {str(e)}")
-    print("Assurez-vous qu'Elasticsearch est installé et en cours d'exécution sur https://localhost:9200")
+    print("\nInstructions de dépannage:")
+    print("1. Assurez-vous qu'Elasticsearch est installé et en cours d'exécution")
+    print("2. Vérifiez les fichiers de configuration dans le dossier elasticsearch-8.16.1/config")
+    print("3. Le mot de passe initial se trouve dans elastic-passwords.txt")
+    print("4. Le certificat CA doit être dans config/certs/http_ca.crt")
     exit(1)
 
 DATA_DIR = "data"
-INDEX_NAME = "zeenbase"
+INDEX_NAME = "documents"
 
-print(f"Démarrage de l'API. Dossier de données: {DATA_DIR}")
-print(f"Chemin absolu du dossier de données: {os.path.abspath(DATA_DIR)}")
-
-def sanitize_input(text):
-    """Sanitize input to prevent XSS attacks"""
-    return bleach.clean(str(text))
-
-def verify_api_key(api_key):
-    print(f"Vérification de la clé API: {api_key[:5]}...")
-    return api_key and api_key.startswith("sk_")
-
-def require_api_key(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if request.method == 'OPTIONS':
-            return '', 204
-            
-        print("Vérification de l'en-tête Authorization")
-        api_key = request.headers.get('Authorization')
-        print(f"En-têtes reçus: {request.headers}")
-        
-        if not api_key:
-            print("Pas de clé API fournie")
-            return jsonify({"error": "No API key provided"}), 401
-        
-        api_key = api_key.replace('Bearer ', '')
-        
-        if not verify_api_key(api_key):
-            print(f"Clé API invalide: {api_key}")
-            return jsonify({"error": "Invalid API key"}), 401
-            
-        return f(*args, **kwargs)
-    return decorated
-
+# Fonction pour indexer les fichiers
 def index_files():
-    """Index all text files in the data directory"""
-    try:
-        if not es.indices.exists(index=INDEX_NAME):
-            print(f"Création de l'index {INDEX_NAME}...")
-            es.indices.create(index=INDEX_NAME)
-            print("Index créé avec succès!")
-        
-        files_indexed = 0
-        for root, dirs, files in os.walk(DATA_DIR):
-            for file in files:
-                if file.endswith('.txt'):
-                    file_path = os.path.join(root, file)
-                    try:
-                        with open(file_path, 'r', encoding='utf-8') as f:
-                            content = f.read()
-                            doc = {
-                                'path': file_path,
-                                'content': content,
-                                'type': 'file',
-                                'size': os.path.getsize(file_path),
-                                'last_modified': time.ctime(os.path.getmtime(file_path))
-                            }
-                            es.index(index=INDEX_NAME, document=doc)
-                            files_indexed += 1
-                        print(f"Fichier indexé avec succès: {file_path}")
-                    except Exception as e:
-                        print(f"Erreur lors de l'indexation de {file_path}: {e}")
-        
-        print(f"Indexation terminée! {files_indexed} fichiers indexés.")
-    except Exception as e:
-        print(f"Erreur critique lors de l'indexation: {e}")
-        exit(1)
-
-@app.route('/search', methods=['POST', 'OPTIONS'])
-@require_api_key
-def search():
-    print("Nouvelle requête de recherche reçue")
-    print(f"Méthode: {request.method}")
-    print(f"En-têtes: {request.headers}")
-    
-    try:
-        data = request.get_json()
-        print(f"Données reçues: {data}")
-    except Exception as e:
-        print(f"Erreur lors de la lecture des données JSON: {e}")
-        return jsonify({"error": "Invalid JSON"}), 400
-    
-    if not data or not isinstance(data, dict):
-        print("Format de requête invalide")
-        return jsonify({"error": "Invalid request format"}), 400
-        
-    keyword = data.get('keyword', '')
-    if not keyword or not isinstance(keyword, str):
-        print("Pas de mot-clé fourni")
-        return jsonify({"error": "No keyword provided"}), 400
-
-    keyword = sanitize_input(keyword)
-    print(f"Recherche du mot-clé: {keyword}")
-    
-    start_time = time.time()
-    
-    try:
-        search_query = {
-            "query": {
-                "match": {
-                    "content": keyword
-                }
-            }
-        }
-        
-        response = es.search(index=INDEX_NAME, body=search_query)
-        hits = response['hits']['hits']
-        
-        results = []
-        for hit in hits:
-            source = hit['_source']
-            result = {
-                "path": html.escape(source['path']),
-                "type": html.escape(source['type']),
-                "size": source['size'],
-                "last_modified": html.escape(source['last_modified'])
-            }
-            results.append(result)
-            
-    except Exception as e:
-        print(f"Erreur lors de la recherche: {e}")
-        return jsonify({"error": "Search error"}), 500
-
-    execution_time = time.time() - start_time
-    
-    response_data = {
-        "results": results,
-        "total_files_searched": len(results),
-        "execution_time": execution_time,
-        "total_results": len(results)
-    }
-    
-    print(f"Recherche terminée en {execution_time:.2f} secondes")
-    print(f"Résultats: {response_data}")
-    return jsonify(response_data)
-
-if __name__ == '__main__':
     print("Indexation des fichiers...")
+    
+    # Création de l'index s'il n'existe pas
+    if not es.indices.exists(index=INDEX_NAME):
+        es.indices.create(index=INDEX_NAME, mappings={
+            "properties": {
+                "content": {"type": "text", "analyzer": "standard"},
+                "filename": {"type": "keyword"}
+            }
+        })
+    
+    # Parcours des fichiers
+    data_dir = os.path.abspath(DATA_DIR)
+    print(f"Chemin absolu du dossier de données: {data_dir}")
+    
+    for filepath in glob.glob(os.path.join(data_dir, "*.txt")):
+        try:
+            with open(filepath, 'r', encoding='utf-8') as file:
+                content = file.read()
+                filename = os.path.basename(filepath)
+                
+                # Indexation du document
+                es.index(index=INDEX_NAME, document={
+                    "content": content,
+                    "filename": filename
+                })
+                print(f"Fichier indexé: {filename}")
+        except Exception as e:
+            print(f"Erreur lors de l'indexation de {filepath}: {str(e)}")
+
+# Routes API
+@app.route('/search', methods=['GET'])
+def search():
+    query = request.args.get('q', '')
+    try:
+        results = es.search(index=INDEX_NAME, query={
+            "multi_match": {
+                "query": query,
+                "fields": ["content", "filename"]
+            }
+        })
+        
+        hits = results['hits']['hits']
+        formatted_results = [{
+            'filename': hit['_source']['filename'],
+            'content': hit['_source']['content'],
+            'score': hit['_score']
+        } for hit in hits]
+        
+        return jsonify(formatted_results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    print("Démarrage de l'API. Dossier de données:", DATA_DIR)
     index_files()
-    print("Démarrage du serveur Flask sur le port 5000...")
     app.run(debug=True, port=5000)
