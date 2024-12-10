@@ -45,21 +45,18 @@ export const regenerateApiKey = async (supabaseClient: any, userId: string) => {
   console.log("Starting API key regeneration for user:", userId);
   
   try {
-    // First, deactivate all existing active keys for this user
+    // Désactiver d'abord toutes les clés existantes
     const { error: deactivateError } = await supabaseClient
       .from('api_keys')
       .update({ is_active: false })
-      .eq('user_id', userId)
-      .eq('is_active', true);
+      .eq('user_id', userId);
 
     if (deactivateError) {
       console.error("Error deactivating existing keys:", deactivateError);
-      throw new Error(`Failed to deactivate existing keys: ${deactivateError.message}`);
+      throw new Error('Failed to deactivate existing keys');
     }
 
-    console.log("Successfully deactivated old keys");
-
-    // Generate and insert new API key
+    // Générer et insérer une nouvelle clé API
     const newApiKey = `sk_${crypto.randomUUID()}`;
     const { error: insertError } = await supabaseClient
       .from('api_keys')
@@ -71,10 +68,10 @@ export const regenerateApiKey = async (supabaseClient: any, userId: string) => {
 
     if (insertError) {
       console.error("Error inserting new API key:", insertError);
-      throw new Error(`Failed to insert new API key: ${insertError.message}`);
+      throw new Error('Failed to insert new API key');
     }
 
-    console.log("Successfully generated new API key");
+    console.log("Successfully regenerated API key");
     return newApiKey;
   } catch (error) {
     console.error("Error in regenerateApiKey:", error);
