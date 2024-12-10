@@ -45,39 +45,11 @@ export const regenerateApiKey = async (supabaseClient: any, userId: string) => {
   console.log("Starting API key regeneration for user:", userId);
   
   try {
-    // First check if user has any existing keys
-    const { data: existingKeys, error: checkError } = await supabaseClient
-      .from('api_keys')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('is_active', true);
-
-    if (checkError) {
-      console.error("Error checking existing keys:", checkError);
-      throw new Error('Failed to check existing keys');
-    }
-
-    // Generate new API key
+    // First, generate the new API key
     const newApiKey = `sk_${crypto.randomUUID()}`;
     console.log("Generated new API key");
 
-    // If there are existing keys, deactivate them
-    if (existingKeys && existingKeys.length > 0) {
-      console.log("Deactivating existing keys");
-      const { error: deactivateError } = await supabaseClient
-        .from('api_keys')
-        .update({ is_active: false })
-        .eq('user_id', userId)
-        .eq('is_active', true);
-
-      if (deactivateError) {
-        console.error("Error deactivating old keys:", deactivateError);
-        throw new Error('Failed to deactivate old keys');
-      }
-      console.log("Old keys deactivated successfully");
-    }
-
-    // Insert new key
+    // Then, insert the new key first
     console.log("Inserting new API key");
     const { error: insertError } = await supabaseClient
       .from('api_keys')
@@ -92,6 +64,22 @@ export const regenerateApiKey = async (supabaseClient: any, userId: string) => {
       throw new Error('Failed to insert new API key');
     }
     console.log("New API key inserted successfully");
+
+    // Finally, deactivate old keys
+    console.log("Deactivating old keys");
+    const { error: deactivateError } = await supabaseClient
+      .from('api_keys')
+      .update({ is_active: false })
+      .eq('user_id', userId)
+      .neq('key_value', newApiKey);
+
+    if (deactivateError) {
+      console.error("Error deactivating old keys:", deactivateError);
+      // Even if deactivation fails, we've already created the new key
+      console.log("Warning: Failed to deactivate old keys, but new key was created");
+    } else {
+      console.log("Old keys deactivated successfully");
+    }
 
     return newApiKey;
   } catch (error) {
