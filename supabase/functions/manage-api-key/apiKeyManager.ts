@@ -45,15 +45,15 @@ export const regenerateApiKey = async (supabaseClient: any, userId: string) => {
   console.log("Starting API key regeneration for user:", userId);
   
   try {
-    // First, find and delete all existing keys for the user
-    const { error: deleteError } = await supabaseClient
+    // First, deactivate all existing keys
+    const { error: updateError } = await supabaseClient
       .from('api_keys')
-      .delete()
+      .update({ is_active: false })
       .eq('user_id', userId);
 
-    if (deleteError) {
-      console.error("Error deleting existing keys:", deleteError);
-      throw new Error('Failed to delete existing keys');
+    if (updateError) {
+      console.error("Error deactivating existing keys:", updateError);
+      throw new Error('Failed to deactivate existing keys');
     }
 
     // Generate and insert a new API key
