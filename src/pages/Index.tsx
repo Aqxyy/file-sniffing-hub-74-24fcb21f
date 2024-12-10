@@ -74,6 +74,15 @@ const Index = () => {
         body: JSON.stringify({ q: sanitizedQuery }),
       });
 
+      console.log("Request details:", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKeyData.key_value}`,
+        },
+        body: JSON.stringify({ q: sanitizedQuery }),
+      });
+
       if (!response.ok) {
         const errorData = await response.text();
         console.error("Response not OK:", {
