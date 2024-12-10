@@ -75,18 +75,24 @@ const Index = () => {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
+        const errorData = await response.text();
         console.error("Response not OK:", {
           status: response.status,
           statusText: response.statusText,
-          body: errorText
+          body: errorData
         });
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
       console.log("Search results:", data);
-      setResults(Array.isArray(data.results) ? data.results : []);
+      
+      if (data && data.results) {
+        setResults(Array.isArray(data.results) ? data.results : []);
+      } else {
+        setResults([]);
+        console.warn("No results array in response:", data);
+      }
     } catch (error) {
       console.error("Search error:", error);
       toast({
@@ -186,7 +192,6 @@ const Index = () => {
       </div>
     </div>
   );
-
 };
 
 export default Index;
