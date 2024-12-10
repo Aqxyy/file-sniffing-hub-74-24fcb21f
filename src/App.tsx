@@ -25,27 +25,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Ajout des headers de sécurité
-useEffect(() => {
-  // Content Security Policy
-  const meta = document.createElement('meta');
-  meta.httpEquiv = "Content-Security-Policy";
-  meta.content = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';";
-  document.head.appendChild(meta);
-
-  // X-Frame-Options
-  const xFrameOptions = document.createElement('meta');
-  xFrameOptions.httpEquiv = "X-Frame-Options";
-  xFrameOptions.content = "DENY";
-  document.head.appendChild(xFrameOptions);
-
-  // X-Content-Type-Options
-  const xContentTypeOptions = document.createElement('meta');
-  xContentTypeOptions.httpEquiv = "X-Content-Type-Options";
-  xContentTypeOptions.content = "nosniff";
-  document.head.appendChild(xContentTypeOptions);
-}, []);
-
 // Protected Route Component avec vérification de sécurité renforcée
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -160,18 +139,40 @@ const AppRoutes = () => {
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  useEffect(() => {
+    // Content Security Policy
+    const meta = document.createElement('meta');
+    meta.httpEquiv = "Content-Security-Policy";
+    meta.content = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';";
+    document.head.appendChild(meta);
+
+    // X-Frame-Options
+    const xFrameOptions = document.createElement('meta');
+    xFrameOptions.httpEquiv = "X-Frame-Options";
+    xFrameOptions.content = "DENY";
+    document.head.appendChild(xFrameOptions);
+
+    // X-Content-Type-Options
+    const xContentTypeOptions = document.createElement('meta');
+    xContentTypeOptions.httpEquiv = "X-Content-Type-Options";
+    xContentTypeOptions.content = "nosniff";
+    document.head.appendChild(xContentTypeOptions);
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <AppRoutes />
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
