@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.1'
+import { validateUser } from "./auth.ts"
 import { getApiKey, regenerateApiKey } from "./apiKeyManager.ts"
 
 const corsHeaders = {
@@ -17,32 +17,7 @@ serve(async (req) => {
   }
 
   try {
-    // Get auth header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header');
-    }
-
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing environment variables');
-    }
-
-    const supabaseClient = createClient(supabaseUrl, supabaseKey);
-    
-    // Get user from token
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
-
-    if (userError || !user) {
-      console.error("Auth error:", userError);
-      throw new Error('Unauthorized');
-    }
-
-    console.log("Processing request for user:", user.id);
+    const { user, supabaseClient } = await validateUser(req.headers.get('Authorization'));
 
     let result;
     if (req.method === 'GET') {

@@ -45,54 +45,30 @@ export const regenerateApiKey = async (supabaseClient: any, userId: string) => {
   console.log("Starting API key regeneration for user:", userId);
   
   try {
-    // First, generate the new API key
+    // First, find and delete all existing keys for the user
+    const { error: deleteError } = await supabaseClient
+      .from('api_keys')
+      .delete()
+      .eq('user_id', userId);
+
+    if (deleteError) {
+      console.error("Error deleting existing keys:", deleteError);
+      throw new Error('Failed to delete existing keys');
+    }
+
+    // Generate and insert a new API key
     const newApiKey = `sk_${crypto.randomUUID()}`;
-    
-    // Insert the new key first with is_active = false
     const { error: insertError } = await supabaseClient
       .from('api_keys')
       .insert({
         user_id: userId,
         key_value: newApiKey,
-        is_active: false
+        is_active: true
       });
 
     if (insertError) {
       console.error("Error inserting new API key:", insertError);
       throw new Error('Failed to create new API key');
-    }
-
-    // Then deactivate all existing active keys
-    const { error: deactivateError } = await supabaseClient
-      .from('api_keys')
-      .update({ is_active: false })
-      .eq('user_id', userId)
-      .eq('is_active', true);
-
-    if (deactivateError) {
-      console.error("Error deactivating existing keys:", deactivateError);
-      // Clean up the newly inserted key if deactivation fails
-      await supabaseClient
-        .from('api_keys')
-        .delete()
-        .eq('key_value', newApiKey);
-      throw new Error('Failed to deactivate existing keys');
-    }
-
-    // Finally, activate the new key
-    const { error: activateError } = await supabaseClient
-      .from('api_keys')
-      .update({ is_active: true })
-      .eq('key_value', newApiKey);
-
-    if (activateError) {
-      console.error("Error activating new key:", activateError);
-      // Clean up if activation fails
-      await supabaseClient
-        .from('api_keys')
-        .delete()
-        .eq('key_value', newApiKey);
-      throw new Error('Failed to activate new key');
     }
 
     console.log("Successfully regenerated API key");
