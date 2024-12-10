@@ -65,6 +65,7 @@ const Index = () => {
         throw new Error("Clé API non trouvée");
       }
 
+      console.log("Sending request to API...");
       const response = await fetch("http://localhost:5000/", {
         method: "POST",
         headers: {
@@ -74,23 +75,14 @@ const Index = () => {
         body: JSON.stringify({ q: sanitizedQuery }),
       });
 
-      console.log("Request details:", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKeyData.key_value}`,
-        },
-        body: JSON.stringify({ q: sanitizedQuery }),
-      });
-
       if (!response.ok) {
-        const errorData = await response.text();
-        console.error("Response not OK:", {
+        const errorText = await response.text();
+        console.error("API Error Response:", {
           status: response.status,
           statusText: response.statusText,
-          body: errorData
+          body: errorText
         });
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`Erreur API: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -117,6 +109,7 @@ const Index = () => {
         description: error instanceof Error ? error.message : "Impossible de contacter le serveur de recherche",
         variant: "destructive",
       });
+      setResults([]);
     } finally {
       setIsSearching(false);
     }

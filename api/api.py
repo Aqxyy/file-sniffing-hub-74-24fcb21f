@@ -14,8 +14,11 @@ CORS(app, resources={
 LEAKOSINT_TOKEN = "5425922455:GJqhUctH"
 LEAKOSINT_URL = 'https://server.leakosint.com/'
 
-@app.route('/', methods=['POST'])
+@app.route('/', methods=['POST', 'OPTIONS'])
 def send_to_leakosint():
+    if request.method == 'OPTIONS':
+        return '', 204
+        
     try:
         # Get query from POST request body
         data = request.get_json()
@@ -49,4 +52,4 @@ def send_to_leakosint():
 
 if __name__ == "__main__":
     print("Starting API on port 5000...")
-    app.run(debug=True, port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)
