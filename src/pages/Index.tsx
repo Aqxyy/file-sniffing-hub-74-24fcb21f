@@ -53,26 +53,42 @@ const Index = () => {
 
     setIsSearching(true);
     try {
+      // Récupérer la clé API active
+      const { data: apiKeyData, error: apiKeyError } = await supabase
+        .from('api_keys')
+        .select('key_value')
+        .eq('is_active', true)
+        .single();
+
+      if (apiKeyError || !apiKeyData) {
+        console.error("Erreur lors de la récupération de la clé API:", apiKeyError);
+        throw new Error("Clé API non trouvée");
+      }
+
       const response = await fetch("http://localhost:5000/search", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRF-Token": document.cookie.match(/csrf-token=([^;]+)/)?.[1] || "",
+          "Authorization": `Bearer ${apiKeyData.key_value}`,
         },
-        credentials: 'include',
         body: JSON.stringify({ keyword: sanitizedQuery }),
       });
 
       if (!response.ok) {
-        throw new Error("Erreur lors de la recherche");
+        console.error("Erreur API:", response.status, response.statusText);
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Détails de l'erreur:", errorData);
+        throw new Error(`Erreur ${response.status}: ${errorData.error || response.statusText}`);
       }
 
       const data = await response.json();
+      console.log("Résultats de la recherche:", data);
       setResults(data.results);
     } catch (error) {
+      console.error("Erreur complète:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de contacter le serveur de recherche",
+        description: error instanceof Error ? error.message : "Impossible de contacter le serveur de recherche",
         variant: "destructive",
       });
     } finally {
