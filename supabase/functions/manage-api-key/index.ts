@@ -9,14 +9,11 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  console.log("Received request:", req.method);
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: {
-        ...corsHeaders,
-        'Access-Control-Max-Age': '86400',
-      }
-    });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -34,12 +31,7 @@ serve(async (req) => {
       const apiKey = await getApiKey(supabaseClient, user.id);
       return new Response(
         JSON.stringify({ api_key: apiKey }),
-        { 
-          headers: { 
-            ...corsHeaders, 
-            'Content-Type': 'application/json' 
-          } 
-        }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -49,12 +41,7 @@ serve(async (req) => {
       const apiKey = await regenerateApiKey(supabaseClient, user.id);
       return new Response(
         JSON.stringify({ api_key: apiKey }),
-        { 
-          headers: { 
-            ...corsHeaders, 
-            'Content-Type': 'application/json' 
-          } 
-        }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 

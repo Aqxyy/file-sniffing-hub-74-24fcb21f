@@ -55,6 +55,11 @@ export const checkAccess = async (supabaseClient: any, user: any) => {
       console.error("No valid subscription found");
       throw new Error('No valid subscription found');
     }
+
+    if (!subscription.api_access) {
+      console.error("API access not enabled for user");
+      throw new Error('API access not enabled');
+    }
   }
 
   console.log("Checking site settings");
