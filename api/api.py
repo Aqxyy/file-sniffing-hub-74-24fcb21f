@@ -16,9 +16,15 @@ CORS(app, resources={
     }
 })
 
-# Configuration Elasticsearch avec gestion d'erreur
+# Configuration Elasticsearch avec gestion d'erreur et HTTPS
 try:
-    es = Elasticsearch(['http://localhost:9200'])
+    # Configuration pour HTTPS
+    es = Elasticsearch(
+        ['https://localhost:9200'],
+        verify_certs=False,  # En développement uniquement
+        ssl_show_warn=False  # Désactive les avertissements SSL
+    )
+    
     if not es.ping():
         print("ERREUR: Impossible de se connecter à Elasticsearch. Assurez-vous qu'il est installé et en cours d'exécution.")
         print("Instructions d'installation :")
@@ -31,7 +37,7 @@ try:
     print("Connexion à Elasticsearch établie avec succès!")
 except Exception as e:
     print(f"ERREUR lors de la connexion à Elasticsearch: {str(e)}")
-    print("Assurez-vous qu'Elasticsearch est installé et en cours d'exécution sur http://localhost:9200")
+    print("Assurez-vous qu'Elasticsearch est installé et en cours d'exécution sur https://localhost:9200")
     exit(1)
 
 DATA_DIR = "data"
