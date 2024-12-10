@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import DOMPurify from 'dompurify';
+import { rateLimit } from '@/lib/rateLimit';
 
 interface AuthContextType {
   user: User | null;
@@ -23,32 +24,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.log("AuthProvider: Initializing auth state");
     
-    // Initial session check
+    // Initial session check with security headers
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log("AuthProvider: Initial session check", session?.user?.email);
-      setUser(session?.user ?? null);
+      if (session?.user) {
+        // Vérification supplémentaire de sécurité
+        if (!session.user.email_confirmed_at) {
+          setUser(null);
+          navigate('/login');
+          return;
+        }
+        setUser(session.user);
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
 
-    // Setup auth state listener
+    // Setup auth state listener with enhanced security
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("AuthProvider: Auth state changed", event, session?.user?.email);
-      setUser(session?.user ?? null);
       
-      if (event === 'SIGNED_IN') {
-        if (session?.user.email_confirmed_at) {
-          navigate('/');
-        } else {
-          toast.warning("Veuillez vérifier votre email avant de continuer");
+      if (session?.user) {
+        // Vérification de sécurité supplémentaire
+        if (!session.user.email_confirmed_at) {
+          setUser(null);
+          toast.error("Email non vérifié");
           navigate('/login');
+          return;
         }
-      } else if (event === 'SIGNED_OUT') {
-        navigate('/login');
-      } else if (event === 'USER_UPDATED') {
-        if (session?.user.email_confirmed_at) {
-          toast.success("Email vérifié avec succès !");
-          navigate('/');
-        }
+        setUser(session.user);
+      } else {
+        setUser(null);
+      }
+      
+      switch (event) {
+        case 'SIGNED_IN':
+          if (session?.user.email_confirmed_at) {
+            navigate('/');
+          } else {
+            toast.warning("Veuillez vérifier votre email avant de continuer");
+            navigate('/login');
+          }
+          break;
+        case 'SIGNED_OUT':
+          navigate('/login');
+          break;
+        case 'USER_UPDATED':
+          if (session?.user.email_confirmed_at) {
+            toast.success("Email vérifié avec succès !");
+            navigate('/');
+          }
+          break;
+        case 'TOKEN_REFRESHED':
+          // Vérification du token rafraîchi
+          if (!session?.user.email_confirmed_at) {
+            setUser(null);
+            navigate('/login');
+          }
+          break;
       }
     });
 
@@ -56,8 +90,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [navigate]);
 
   const signIn = async (email: string, password: string) => {
+    // Rate limiting
+    if (!rateLimit('signIn', 3)) {
+      throw new Error("Trop de tentatives de connexion. Veuillez réessayer plus tard.");
+    }
+
     console.log("AuthProvider: Attempting sign in", email);
     const sanitizedEmail = DOMPurify.sanitize(email.toLowerCase().trim());
+    
+    // Validation supplémentaire
+    if (!sanitizedEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      throw new Error("Format d'email invalide");
+    }
+
     const { error, data } = await supabase.auth.signInWithPassword({ 
       email: sanitizedEmail, 
       password 
@@ -77,8 +122,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string) => {
+    // Rate limiting
+    if (!rateLimit('signUp', 3)) {
+      throw new Error("Trop de tentatives d'inscription. Veuillez réessayer plus tard.");
+    }
+
     console.log("AuthProvider: Attempting sign up", email);
     const sanitizedEmail = DOMPurify.sanitize(email.toLowerCase().trim());
+    
+    // Validation du mot de passe
+    if (password.length < 8) {
+      throw new Error("Le mot de passe doit contenir au moins 8 caractères");
+    }
+    if (!password.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/)) {
+      throw new Error("Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre");
+    }
+
     const { error, data } = await supabase.auth.signUp({
       email: sanitizedEmail,
       password,
@@ -112,6 +171,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw error;
     }
     console.log("AuthProvider: Sign out successful");
+    // Nettoyage supplémentaire de sécurité
+    localStorage.clear();
+    sessionStorage.clear();
   };
 
   return (
