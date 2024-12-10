@@ -16,8 +16,23 @@ CORS(app, resources={
     }
 })
 
-# Configuration Elasticsearch
-es = Elasticsearch(['http://localhost:9200'])
+# Configuration Elasticsearch avec gestion d'erreur
+try:
+    es = Elasticsearch(['http://localhost:9200'])
+    if not es.ping():
+        print("ERREUR: Impossible de se connecter à Elasticsearch. Assurez-vous qu'il est installé et en cours d'exécution.")
+        print("Instructions d'installation :")
+        print("1. Téléchargez Elasticsearch depuis : https://www.elastic.co/downloads/elasticsearch")
+        print("2. Décompressez le fichier")
+        print("3. Exécutez bin/elasticsearch.bat (Windows) ou bin/elasticsearch (Linux/Mac)")
+        print("4. Attendez que le service démarre (peut prendre quelques minutes)")
+        print("5. Relancez cette API")
+        exit(1)
+    print("Connexion à Elasticsearch établie avec succès!")
+except Exception as e:
+    print(f"ERREUR lors de la connexion à Elasticsearch: {str(e)}")
+    print("Assurez-vous qu'Elasticsearch est installé et en cours d'exécution sur http://localhost:9200")
+    exit(1)
 
 DATA_DIR = "data"
 INDEX_NAME = "zeenbase"
@@ -58,27 +73,37 @@ def require_api_key(f):
 
 def index_files():
     """Index all text files in the data directory"""
-    if not es.indices.exists(index=INDEX_NAME):
-        es.indices.create(index=INDEX_NAME)
+    try:
+        if not es.indices.exists(index=INDEX_NAME):
+            print(f"Création de l'index {INDEX_NAME}...")
+            es.indices.create(index=INDEX_NAME)
+            print("Index créé avec succès!")
         
-    for root, dirs, files in os.walk(DATA_DIR):
-        for file in files:
-            if file.endswith('.txt'):
-                file_path = os.path.join(root, file)
-                try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        content = f.read()
-                        doc = {
-                            'path': file_path,
-                            'content': content,
-                            'type': 'file',
-                            'size': os.path.getsize(file_path),
-                            'last_modified': time.ctime(os.path.getmtime(file_path))
-                        }
-                        es.index(index=INDEX_NAME, document=doc)
-                    print(f"Fichier indexé: {file_path}")
-                except Exception as e:
-                    print(f"Erreur lors de l'indexation de {file_path}: {e}")
+        files_indexed = 0
+        for root, dirs, files in os.walk(DATA_DIR):
+            for file in files:
+                if file.endswith('.txt'):
+                    file_path = os.path.join(root, file)
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            content = f.read()
+                            doc = {
+                                'path': file_path,
+                                'content': content,
+                                'type': 'file',
+                                'size': os.path.getsize(file_path),
+                                'last_modified': time.ctime(os.path.getmtime(file_path))
+                            }
+                            es.index(index=INDEX_NAME, document=doc)
+                            files_indexed += 1
+                        print(f"Fichier indexé avec succès: {file_path}")
+                    except Exception as e:
+                        print(f"Erreur lors de l'indexation de {file_path}: {e}")
+        
+        print(f"Indexation terminée! {files_indexed} fichiers indexés.")
+    except Exception as e:
+        print(f"Erreur critique lors de l'indexation: {e}")
+        exit(1)
 
 @app.route('/search', methods=['POST', 'OPTIONS'])
 @require_api_key
