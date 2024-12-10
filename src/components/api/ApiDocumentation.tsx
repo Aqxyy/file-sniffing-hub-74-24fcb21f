@@ -20,7 +20,7 @@ const ApiDocumentation = () => {
             <code className="text-blue-400">POST /api/search</code>
             <p className="mt-1">Rechercher dans la base de données</p>
             <pre className="bg-gray-800 p-4 rounded mt-2 overflow-x-auto">
-              <code>{`curl -X POST "https://api.example.com/search" \\
+              <code>{`curl -X POST "https://zeenbase.com/api/search" \\
 -H "Authorization: Bearer YOUR_API_KEY" \\
 -H "Content-Type: application/json" \\
 -d '{"keyword": "votre_recherche"}'`}</code>
