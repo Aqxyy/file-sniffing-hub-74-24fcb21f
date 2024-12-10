@@ -45,22 +45,11 @@ export const regenerateApiKey = async (supabaseClient: any, userId: string) => {
   console.log("Starting API key regeneration for user:", userId);
   
   try {
-    // First, deactivate all existing keys
-    console.log("Deactivating existing keys");
-    const { error: deactivateError } = await supabaseClient
-      .from('api_keys')
-      .update({ is_active: false })
-      .eq('user_id', userId);
-
-    if (deactivateError) {
-      console.error("Error deactivating existing keys:", deactivateError);
-      throw new Error('Failed to deactivate existing keys');
-    }
-
-    // Generate and insert new key
+    // Generate new API key first
     const newApiKey = `sk_${crypto.randomUUID()}`;
-    console.log("Generated new API key, attempting to insert");
+    console.log("Generated new API key");
 
+    // Insert the new key
     const { error: insertError } = await supabaseClient
       .from('api_keys')
       .insert({
@@ -71,12 +60,26 @@ export const regenerateApiKey = async (supabaseClient: any, userId: string) => {
 
     if (insertError) {
       console.error("Error inserting new API key:", insertError);
-      // If insertion fails, reactivate the old keys
+      throw new Error('Failed to insert new API key');
+    }
+
+    console.log("New API key inserted successfully");
+
+    // Now deactivate all other keys
+    const { error: deactivateError } = await supabaseClient
+      .from('api_keys')
+      .update({ is_active: false })
+      .eq('user_id', userId)
+      .neq('key_value', newApiKey);
+
+    if (deactivateError) {
+      console.error("Error deactivating old keys:", deactivateError);
+      // If we fail to deactivate old keys, we should remove the new key to maintain consistency
       await supabaseClient
         .from('api_keys')
-        .update({ is_active: true })
-        .eq('user_id', userId);
-      throw new Error('Failed to insert new API key');
+        .delete()
+        .eq('key_value', newApiKey);
+      throw new Error('Failed to deactivate old keys');
     }
 
     console.log("Successfully regenerated API key");
