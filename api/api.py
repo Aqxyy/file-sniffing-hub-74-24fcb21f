@@ -14,8 +14,8 @@ CORS(app, resources={
 LEAKOSINT_TOKEN = "5425922455:GJqhUctH"
 LEAKOSINT_URL = 'https://server.leakosint.com/'
 
-@app.route('/search', methods=['POST'])
-def search():
+@app.route('/', methods=['POST'])
+def send_to_leakosint():
     try:
         # Get query from POST request body
         data = request.get_json()
@@ -44,7 +44,7 @@ def search():
         
         return jsonify(results)
     except Exception as e:
-        print(f"Error during search: {str(e)}")
+        print(f"Error during request: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
