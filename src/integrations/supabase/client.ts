@@ -13,11 +13,27 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    flowType: 'pkce'
+    flowType: 'pkce',
+    storage: window.localStorage,
+    storageKey: 'supabase.auth.token',
+    debug: true
   },
   global: {
     headers: {
       'X-Client-Info': 'supabase-js-web'
     }
+  },
+  db: {
+    schema: 'public'
   }
 });
+
+// Export d'une fonction qui vérifie si Supabase est initialisé
+export const getSupabase = () => {
+  if (!supabase) {
+    throw new Error(
+      'Erreur d\'initialisation de Supabase. Veuillez vérifier votre configuration.'
+    );
+  }
+  return supabase;
+};
