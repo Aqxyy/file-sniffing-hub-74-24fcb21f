@@ -71,7 +71,7 @@ const Index = () => {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${apiKeyData.key_value}`,
         },
-        body: JSON.stringify({ keyword: sanitizedQuery }),
+        body: JSON.stringify({ q: sanitizedQuery }), // Changed from keyword to q
       });
 
       if (!response.ok) {
@@ -83,7 +83,7 @@ const Index = () => {
 
       const data = await response.json();
       console.log("Résultats de la recherche:", data);
-      setResults(data.results);
+      setResults(data.results || []); // Added fallback empty array
     } catch (error) {
       console.error("Erreur complète:", error);
       toast({

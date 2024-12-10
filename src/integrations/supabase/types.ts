@@ -34,15 +34,7 @@ export type Database = {
           last_used_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "api_keys_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       feedback: {
         Row: {
@@ -66,15 +58,25 @@ export type Database = {
           rating?: number
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "feedback_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          email: string | null
+          email_confirmed_at: string | null
+          id: string
+        }
+        Insert: {
+          email?: string | null
+          email_confirmed_at?: string | null
+          id: string
+        }
+        Update: {
+          email?: string | null
+          email_confirmed_at?: string | null
+          id?: string
+        }
+        Relationships: []
       }
       site_settings: {
         Row: {
@@ -128,36 +130,11 @@ export type Database = {
           stripe_subscription_id?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "subscriptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
-      profiles: {
-        Row: {
-          email: string | null
-          email_confirmed_at: string | null
-          id: string | null
-        }
-        Insert: {
-          email?: string | null
-          email_confirmed_at?: string | null
-          id?: string | null
-        }
-        Update: {
-          email?: string | null
-          email_confirmed_at?: string | null
-          id?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       [_ in never]: never
