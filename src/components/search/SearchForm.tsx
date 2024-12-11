@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabase";
 import DOMPurify from 'dompurify';
 
 interface SearchFormProps {
@@ -30,23 +29,11 @@ const SearchForm = ({ onSearchResults }: SearchFormProps) => {
 
     setIsSearching(true);
     try {
-      const { data: apiKeyData, error: apiKeyError } = await supabase
-        .from('api_keys')
-        .select('key_value')
-        .eq('is_active', true)
-        .single();
-
-      if (apiKeyError || !apiKeyData) {
-        console.error("Erreur lors de la récupération de la clé API:", apiKeyError);
-        throw new Error("Clé API non trouvée");
-      }
-
       console.log("Sending request to API...");
       const response = await fetch("http://localhost:5000/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKeyData.key_value}`,
         },
         body: JSON.stringify({ q: sanitizedQuery }),
       });
@@ -68,7 +55,7 @@ const SearchForm = ({ onSearchResults }: SearchFormProps) => {
         onSearchResults(data.results);
         toast({
           title: "Succès",
-          description: "Résultats trouvés avec succès",
+          description: `${data.results.length} résultats trouvés`,
         });
       } else {
         onSearchResults([]);
