@@ -39,12 +39,6 @@ const SearchForm = ({ onSearchResults }: SearchFormProps) => {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API Error Response:", {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorText
-        });
         throw new Error(`Erreur API: ${response.status} ${response.statusText}`);
       }
 
@@ -67,12 +61,22 @@ const SearchForm = ({ onSearchResults }: SearchFormProps) => {
       }
     } catch (error) {
       console.error("Search error:", error);
-      toast({
-        title: "Erreur",
-        description: error instanceof Error ? error.message : "Impossible de contacter le serveur de recherche",
-        variant: "destructive",
-      });
       onSearchResults([]);
+      
+      // More specific error message for connection issues
+      if (error instanceof TypeError && error.message === "Failed to fetch") {
+        toast({
+          title: "Erreur de connexion",
+          description: "Impossible de contacter le serveur de recherche. Assurez-vous que l'API est en cours d'exécution sur le port 5000.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: error instanceof Error ? error.message : "Une erreur est survenue lors de la recherche",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsSearching(false);
     }
