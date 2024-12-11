@@ -64,8 +64,8 @@ const SearchForm = ({ onSearchResults }: SearchFormProps) => {
       const data = await response.json();
       console.log("Search results:", data);
       
-      if (data && data.results) {
-        onSearchResults(Array.isArray(data.results) ? data.results : []);
+      if (data && Array.isArray(data.results)) {
+        onSearchResults(data.results);
         toast({
           title: "Succès",
           description: "Résultats trouvés avec succès",
