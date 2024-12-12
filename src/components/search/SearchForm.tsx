@@ -43,27 +43,36 @@ const SearchForm = ({ onSearchResults }: SearchFormProps) => {
       }
 
       const data = await response.json();
-      console.log("Search results:", data);
+      console.log("API Response:", data); // Debug log
       
       if (data && Array.isArray(data.results)) {
+        console.log("Formatted results:", data.results); // Debug log
         onSearchResults(data.results);
-        toast({
-          title: "Succès",
-          description: `${data.results.length} résultats trouvés`,
-        });
+        
+        if (data.results.length > 0) {
+          toast({
+            title: "Succès",
+            description: `${data.results.length} résultats trouvés`,
+          });
+        } else {
+          toast({
+            title: "Information",
+            description: "Aucun résultat trouvé",
+          });
+        }
       } else {
+        console.warn("Invalid response format:", data);
         onSearchResults([]);
-        console.warn("No results array in response:", data);
         toast({
-          title: "Information",
-          description: "Aucun résultat trouvé",
+          title: "Erreur",
+          description: "Format de réponse invalide",
+          variant: "destructive",
         });
       }
     } catch (error) {
       console.error("Search error:", error);
       onSearchResults([]);
       
-      // More specific error message for connection issues
       if (error instanceof TypeError && error.message === "Failed to fetch") {
         toast({
           title: "Erreur de connexion",

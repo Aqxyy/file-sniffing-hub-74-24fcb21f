@@ -8,12 +8,29 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+interface SearchResult {
+  email: string;
+  source: string;
+  date: string;
+  password: string;
+}
+
 interface SearchResultsProps {
-  results: any[];
+  results: SearchResult[];
 }
 
 const SearchResults = ({ results }: SearchResultsProps) => {
-  if (results.length === 0) return null;
+  console.log("Received results:", results); // Debug log
+
+  if (!Array.isArray(results)) {
+    console.error("Results is not an array:", results);
+    return null;
+  }
+
+  if (results.length === 0) {
+    console.log("No results found");
+    return null;
+  }
 
   return (
     <AnimatePresence>
@@ -44,10 +61,18 @@ const SearchResults = ({ results }: SearchResultsProps) => {
               <TableBody>
                 {results.map((result, index) => (
                   <TableRow key={index} className="border-gray-700">
-                    <TableCell className="text-gray-300">{result.email || "N/A"}</TableCell>
-                    <TableCell className="text-gray-300">{result.source || "N/A"}</TableCell>
-                    <TableCell className="text-gray-300">{result.date || "N/A"}</TableCell>
-                    <TableCell className="text-gray-300">{result.password || "N/A"}</TableCell>
+                    <TableCell className="text-gray-300">
+                      {result.email || "N/A"}
+                    </TableCell>
+                    <TableCell className="text-gray-300">
+                      {result.source || "N/A"}
+                    </TableCell>
+                    <TableCell className="text-gray-300">
+                      {result.date || "N/A"}
+                    </TableCell>
+                    <TableCell className="text-gray-300">
+                      {result.password || "N/A"}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
