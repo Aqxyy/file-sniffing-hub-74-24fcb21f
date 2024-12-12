@@ -36,16 +36,22 @@ def send_to_leakosint():
         }
         
         print(f"Sending request to Leakosint: {leakosint_data}")
-        response = requests.post(LEAKOSINT_URL, json=leakosint_data)
+        response = requests.post(LEAKOSINT_URL, json=leakosint_data, verify=False)
         
         if not response.ok:
             print(f"Error from Leakosint: Status {response.status_code}, Response: {response.text}")
             return jsonify({"error": "Error from Leakosint API"}), response.status_code
             
-        results = response.json()
-        print(f"Received response from Leakosint: {results}")
+        api_response = response.json()
+        print(f"Received response from Leakosint: {api_response}")
         
-        return jsonify(results)
+        # Format the response to match what the frontend expects
+        formatted_response = {
+            "results": api_response.get("results", []) if isinstance(api_response, dict) else []
+        }
+        
+        return jsonify(formatted_response)
+        
     except Exception as e:
         print(f"Error during request: {str(e)}")
         return jsonify({"error": str(e)}), 500
