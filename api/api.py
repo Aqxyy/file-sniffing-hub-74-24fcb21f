@@ -46,11 +46,20 @@ def send_to_leakosint():
         print(f"Received response from Leakosint: {api_response}")
         
         # Format the response to match what the frontend expects
-        formatted_response = {
-            "results": api_response.get("results", []) if isinstance(api_response, dict) else []
-        }
+        formatted_results = []
+        if api_response and 'List' in api_response:
+            for source, data in api_response['List'].items():
+                if 'Data' in data:
+                    for entry in data['Data']:
+                        result = {
+                            'email': entry.get('Email', ''),
+                            'source': source,
+                            'date': entry.get('RegDate', 'N/A'),
+                            'password': entry.get('Password', entry.get('Password(MD5)', entry.get('Password(SHA-1)', 'N/A')))
+                        }
+                        formatted_results.append(result)
         
-        return jsonify(formatted_response)
+        return jsonify({"results": formatted_results})
         
     except Exception as e:
         print(f"Error during request: {str(e)}")
