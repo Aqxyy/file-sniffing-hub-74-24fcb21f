@@ -51,11 +51,17 @@ def send_to_leakosint():
             for source, data in api_response['List'].items():
                 if 'Data' in data:
                     for entry in data['Data']:
+                        # Get the password from various possible fields
+                        password = entry.get('Password', 
+                                  entry.get('Password(MD5)', 
+                                  entry.get('Password(SHA-1)', 
+                                  entry.get('Password(bcrypt)', 'N/A'))))
+                        
                         result = {
                             'email': entry.get('Email', ''),
                             'source': source,
                             'date': entry.get('RegDate', 'N/A'),
-                            'password': entry.get('Password', entry.get('Password(MD5)', entry.get('Password(SHA-1)', 'N/A')))
+                            'password': password
                         }
                         formatted_results.append(result)
         
